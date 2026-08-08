@@ -1,96 +1,28 @@
-# 🐦 Desktop Bird — Pocket Bird Enhanced Edition
+# 🐾 Desktop Pet Suite — Cat (Shiro) & Bird (Pocket-Bird)
 
-A delightful, animated desktop companion that lives on your screen — perches, sings, hops, flies, wears stylish hats, chases your mouse cursor, and keeps you company!
-
-*Based on [Pocket-Bird](https://github.com/matthew-r-callaghan/Pocket-Bird) by Matthew Callaghan.*
+> Interactive desktop companions that live on your screen — wander, sleep, chirp, chase your mouse cursor, and keep you company!
 
 ---
 
-## ✨ Features
+## 🐾 Included Desktop Companions
 
-### Behaviours & Animations
-| State | Description |
-|---|---|
-| **Idle / Perch** | Perches comfortably and head-bobs |
-| **Singing** | Opens beak and sings cheerful melodies with audio |
-| **Hopping** | Hops along your desktop taskbar |
-| **Flying** | Soars left or right across the screen |
-| **Sleeping** | Tucks head under wing with ZZZ bubbles |
-| **Chasing** | Flies/hops toward your mouse cursor in real time |
-| **Happy** | Flutters wings with heart particles when petted |
-| **Grumpy** | Ruffles feathers briefly when poked mid-nap |
+### 🐱 1. Desktop Cat — Shiro & Custom Skins Edition
+- 🐱 **Avatar**: Snow-white fur cat with heterochromic eyes (left: ocean blue `#00a2ff`, right: warm brown `#b45514`).
+- 🎨 **8 Skins**: `shiro`, `classic`, `black`, `orange`, `calico`, `pink`, `golden`, `cyberpunk`.
+- 🕹️ **Features**: Taskbar wandering, sleeping, petted happy animation, speech bubbles, mouse chasing, custom audio (`meow.wav`, `purr.wav`, `happy.wav`, `angry.wav`), Catppuccin Dark UI.
 
----
-
-### 🎨 34 Selectable Bird Species
-Switch between 34 real-world bird species using the **Bird Species Selector** modal (Right-Click → Bird Species Selector):
-
-- 🐦 **Eastern Bluebird** (*Sialia sialis*)
-- ❄️ **Shima Enaga** (*Aegithalos caudatus*) — Fluffy Hokkaido long-tailed tit
-- 💜 **Tufted Titmouse** (*Baeolophus bicolor*)
-- 🧡 **European Robin** (*Erithacus rubecula*)
-- ❤️ **Red Cardinal** (*Cardinalis cardinalis*)
-- 💛 **American Goldfinch** (*Spinus tristis*)
-- 💙 **Barn Swallow** (*Hirundo rustica*)
-- 🇦🇺 **Mistletoebird** (*Dicaeum hirundinaceum*)
-- ❤️ **Scarlet Robin** (*Petroica boodang*)
-- 🧡 **American Robin** (*Turdus migratorius*)
-- 🤎 **Carolina Wren** (*Thryothorus ludovicianus*)
-- 🖤 **Black-capped Chickadee** (*Poecile atricapillus*)
-- 🪶 **Blue Jay** (*Cyanocitta cristata*)
-- 🩶 **Dark-eyed Junco** (*Junco hyemalis*)
-- ❤️ **House Finch** (*Haemorhous mexicanus*)
-- 🖤❤️ **Red-winged Blackbird** (*Agelaius phoeniceus*)
-- 🐦‍⬛ **Rock Pigeon** (*Columba livia*)
-- ❤️ **Red Avadavat** (*Amandava amandava*)
-- 🌸 **Pink Robin** (*Petroica rodinogaster*)
-- 🩵 **Spangled Cotinga** (*Cotinga cayana*)
-- 💙💛 **Elegant Euphonia** (*Euphonia elegantissima*)
-- 🎨 **Painted Bunting** (*Passerina ciris*)
-- ❤️ **Red Warbler** (*Cardellina rubra*)
-- 🇨🇺 **Cuban Tody** (*Todus multicolor*)
-- 💜 **Violet-backed Starling** (*Cinnyricinclus leucogaster*)
-- 💙 **Steller's Jay** (*Cyanocitta stelleri*)
-- 🕊️ **Mourning Dove** (*Zenaida macroura*)
-- 💙 **White-winged Fairywren** (*Malurus leucopterus*)
-- ⬛ **Little Crow** (*Corvus bennetti*)
-- ❤️ **Redpoll** (*Acanthis flammea*)
-- 🎮 **Pidgey** (*Avis pidgeot*)
+### 🐦 2. Desktop Bird — Pocket-Bird Enhanced Edition
+- 🎨 **34 Bird Species**: Eastern Bluebird, Shima Enaga (Hokkaido Tit), Red Cardinal, Tufted Titmouse, European Robin, American Goldfinch, Pidgey, and 27 more!
+- 🎩 **12 Wearable Hats**: Top Hat, Viking Helmet, Cowboy Hat, Fez, Wizard Hat, Baseball Cap, Beanie, Sun Hat, Straw Hat, Cordovan Hat.
+- 🪶 **Wing-Flapping Animations**: Authentic 4-frame flight cycle with zero heart interference on movement/sleep.
+- 📜 **Display Text & Line Perching**: Sits directly on website text lines, horizontal dividers `__________________________`, code blocks, and taskbars!
+- 🔊 **Birdsong Synthesis**: Real-time frequency-swept chirps & melodies.
 
 ---
 
-### 🎩 12 Wearable Hats
-Customize your bird with stylish hats in the **Hat Closet** (Right-Click → Wearable Hat Closet):
+## 🚀 Quick Start
 
-1. 👒 **No Hat / Invisible Hat**
-2. 🎩 **Top Hat**
-3. 🛡️ **Viking Helmet**
-4. 🤠 **Cowboy Hat**
-5. 🪄 **Fez**
-6. 🧙‍♂️ **Wizard Hat**
-7. 🧢 **Baseball Cap**
-8. 🌸 **Flower Hat**
-9. 🧶 **Beanie**
-10. 👒 **Sun Hat**
-11. 🌾 **Straw Hat**
-12. 🇪🇸 **Cordovan Hat**
-
----
-
-## 🕹️ Interactivity & Controls
-
-| Input | Action |
-|---|---|
-| Left-click | Pet the bird 🐦 |
-| Double-click | Show speech bubble with bird facts 💬 |
-| Right-click | Open context menu ⚙️ |
-| Click + drag | Move bird anywhere on screen |
-| `Esc` | Quit |
-| System Tray | Species selector, hat closet, settings, quit |
-
----
-
-## 🚀 How to Run
+### Installation
 
 ```bash
 # Clone the repository
@@ -99,10 +31,33 @@ cd Desktop_pet
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Launch Desktop Bird
-python main.py
 ```
+
+### Launch Options
+
+- **Interactive Pet Launcher**:
+  ```bash
+  python main.py
+  ```
+
+- **Launch Desktop Cat Directly**:
+  ```bash
+  python main.py cat
+  # OR
+  cd cat && python main.py
+  ```
+
+- **Launch Desktop Bird Directly**:
+  ```bash
+  python main.py bird
+  # OR
+  cd bird && python main.py
+  ```
+
+- **Launch BOTH Pets Simultaneously**:
+  ```bash
+  python main.py both
+  ```
 
 ---
 
