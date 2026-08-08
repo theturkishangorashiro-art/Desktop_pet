@@ -2,8 +2,8 @@
 Desktop Bird 🐦 — Pocket Bird Enhanced Edition
 Based on Pocket-Bird by @matthew-r-callaghan
 Featuring 34 Bird Species, 12 Wearable Hats, Authentic Wing-Flapping Animations,
-Isolated Heart Particles (petting only), 1/3 Compact Size, Birdsong Voice Synthesis,
-Mouse Chasing, Interactive Dragging, Speech Bubbles, and Catppuccin Dark UI.
+Line-Perching Engine (sits on window titlebars & taskbar lines), 1.5x Default Size (48px),
+Isolated Heart Particles (petting only), Birdsong Voice Synthesis, and Catppuccin UI.
 """
 
 import os
@@ -55,10 +55,10 @@ _CONFIG_PATH = Path.home() / ".desktop_bird_config.json"
 
 DEFAULTS: dict = {
     "speed":         3,          # movement speed
-    "scale":         1,          # sprite scale (1x = 32px - 1/3 compact size)
+    "scale":         1.5,        # sprite scale (1.5x = 48px)
     "species":       "bluebird", # default species
     "hat":           "none",     # default hat
-    "anim_ms":       90,         # fast, smooth wing-flapping frame delay
+    "anim_ms":       90,         # wing-flapping frame delay
     "always_on_top": True,
     "mouse_chasing": True,
     "sound":         True,
@@ -337,6 +337,41 @@ def save_cfg(cfg: dict) -> None:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SCREEN LINE & PERCH DETECTION (Taskbar & Open Window Top Edges)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def get_perch_lines(screen_w: int, screen_h: int) -> list[tuple[int, int, int]]:
+    """
+    Returns a list of horizontal perch lines (x_start, x_end, y_pos).
+    Always includes the primary taskbar top edge / work area line.
+    Includes top edges of open visible windows on Windows.
+    """
+    lines = []
+    # Primary line: Taskbar top edge / Work area bottom
+    wa_w, wa_h = work_area()
+    lines.append((0, wa_w, wa_h))
+
+    if _WIN32:
+        try:
+            def enum_windows_cb(hwnd, _):
+                if win32gui.IsWindowVisible(hwnd) and not win32gui.IsIconic(hwnd):
+                    style = win32gui.GetWindowLong(hwnd, win32con.GWL_STYLE)
+                    if (style & win32con.WS_VISIBLE) and not (style & win32con.WS_CHILD):
+                        rect = win32gui.GetWindowRect(hwnd)
+                        left, top, right, bottom = rect
+                        w = right - left
+                        h = bottom - top
+                        # Filter reasonable window sizes (titlebars/edges)
+                        if w >= 200 and h >= 100 and 0 <= top < screen_h - 60:
+                            lines.append((max(0, left), min(screen_w, right), top))
+            win32gui.EnumWindows(enum_windows_cb, None)
+        except Exception:
+            pass
+
+    return lines
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # AUDIO SYNTHESIS ENGINE (Birdsong Chirps & Melodies)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -414,27 +449,14 @@ class S(Enum):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# AUTHENTIC SPRITE LAYER RENDERER (Wing Flapping & Isolated Heart Particles)
+# SPRITE LAYER RENDERER (Supports Fractional Scale e.g. 1.5x = 48px)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class Sprites:
-    """
-    birb.png slice index mapping (10 slices of 32x32):
-    0: base
-    1: headDown
-    2: heartOne
-    3: heartTwo
-    4: heartThree
-    5: tuftBase
-    6: tuftDown
-    7: wingsUp
-    8: wingsDown
-    9: happyEye
-    """
     DIR = Path(__file__).parent / "assets"
 
-    def __init__(self, scale: int, species_key: str = "bluebird", hat_key: str = "none"):
-        self.scale = max(1, int(scale))
+    def __init__(self, scale: float, species_key: str = "bluebird", hat_key: str = "none"):
+        self.scale = max(0.5, float(scale))
         self.species_key = species_key if species_key in SPECIES_DATA else "bluebird"
         self.hat_key = hat_key if hat_key in HATS_DATA else "none"
         self._cache: dict = {}
@@ -465,49 +487,45 @@ class Sprites:
 
         # 3. Crested bird tuft
         if has_tuft:
-            tuft_idx = 6 if 1 in slice_indices else 5 # tuftDown if headDown else tuftBase
+            tuft_idx = 6 if 1 in slice_indices else 5
             t_slice = self.birb_img.crop((tuft_idx * 32, 0, (tuft_idx + 1) * 32, 32))
             out.alpha_composite(t_slice)
 
         # 4. Hat placement
         if h_idx >= 0 and h_idx * 12 < self.hats_img.width:
             h_frame = self.hats_img.crop((h_idx * 12, 0, (h_idx + 1) * 12, 12))
-            # Adjust hat position if head is down vs normal
             hat_y = 2 if 1 in slice_indices else 1
             out.alpha_composite(h_frame, (10, hat_y))
 
         if flip_l:
             out = out.transpose(Image.FLIP_LEFT_RIGHT)
 
-        if self.scale > 1:
-            out = out.resize((32 * self.scale, 32 * self.scale), Image.NEAREST)
+        target_sz = int(round(32 * self.scale))
+        if target_sz != 32:
+            out = out.resize((target_sz, target_sz), Image.NEAREST)
 
         ph = ImageTk.PhotoImage(out)
         self._cache[key] = ph
         return ph
 
     def sprite_size(self) -> tuple[int, int]:
-        sz = 32 * self.scale
+        sz = int(round(32 * self.scale))
         return sz, sz
 
     def load_all(self) -> dict:
-        # Authentic Pocket-Bird animation layer compositions:
         return {
-            # Idle perching
             "idle": [
                 self._render_layer_frame([0]),
             ],
-            # Head bobbing
             "bob": [
                 self._render_layer_frame([0]),
                 self._render_layer_frame([1]),
             ],
-            # Wing-flapping flying (authentic 4-frame flight cycle!)
             "fly_r": [
-                self._render_layer_frame([0]),           # Base body
-                self._render_layer_frame([0, 7]),        # Wings UP!
-                self._render_layer_frame([1]),           # Head down
-                self._render_layer_frame([0, 8]),        # Wings DOWN!
+                self._render_layer_frame([0]),
+                self._render_layer_frame([0, 7]),
+                self._render_layer_frame([1]),
+                self._render_layer_frame([0, 8]),
             ],
             "fly_l": [
                 self._render_layer_frame([0], flip_l=True),
@@ -515,7 +533,6 @@ class Sprites:
                 self._render_layer_frame([1], flip_l=True),
                 self._render_layer_frame([0, 8], flip_l=True),
             ],
-            # Taskbar hopping
             "hop_r": [
                 self._render_layer_frame([0]),
                 self._render_layer_frame([1]),
@@ -524,20 +541,15 @@ class Sprites:
                 self._render_layer_frame([0], flip_l=True),
                 self._render_layer_frame([1], flip_l=True),
             ],
-            # Sleeping (Tuck head under wing — NO HEARTS!)
             "to_sleep":   [self._render_layer_frame([1])],
             "sleeping":   [self._render_layer_frame([1])],
             "from_sleep": [self._render_layer_frame([0])],
-
-            # Petting ONLY (Floating Heart particles!)
             "happy": [
-                self._render_layer_frame([0, 9, 2]),    # Happy eye + Heart 1
-                self._render_layer_frame([0, 9, 3]),    # Happy eye + Heart 2
-                self._render_layer_frame([0, 9, 4]),    # Happy eye + Heart 3
-                self._render_layer_frame([0, 9, 3]),    # Happy eye + Heart 2
+                self._render_layer_frame([0, 9, 2]),
+                self._render_layer_frame([0, 9, 3]),
+                self._render_layer_frame([0, 9, 4]),
+                self._render_layer_frame([0, 9, 3]),
             ],
-
-            # Poke (Grumpy ruffle)
             "angry": [
                 self._render_layer_frame([1, 8]),
                 self._render_layer_frame([0, 7]),
@@ -567,7 +579,7 @@ class Sprites:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class Bubble:
-    def __init__(self, parent: tk.Tk, pet_x: int, pet_y: int, pet_w: int, scale: int, custom_msg: str = None):
+    def __init__(self, parent: tk.Tk, pet_x: int, pet_y: int, pet_w: int, scale: float, custom_msg: str = None):
         self.top = tk.Toplevel(parent)
         self.top.overrideredirect(True)
         self.top.attributes("-topmost", True)
@@ -601,7 +613,7 @@ class SpeciesSelectorWin:
         "#1e1e2e", "#313244", "#45475a", "#cdd6f4", "#a6adc8", "#89b4fa", "#a6e3a1", "#181825"
     )
 
-    def __init__(self, parent: tk.Tk, current_species: str, current_hat: str, scale: int, on_select):
+    def __init__(self, parent: tk.Tk, current_species: str, current_hat: str, scale: float, on_select):
         self._on_select = on_select
         self.top = tk.Toplevel(parent)
         self.top.title("🐦 Select Bird Species")
@@ -636,7 +648,7 @@ class SpeciesSelectorWin:
             row.config(highlightbackground=self.ACCENT if is_active else self.SURFACE)
             row.pack(fill="x", pady=4, padx=4)
 
-            prev_mgr = Sprites(2, key, current_hat)
+            prev_mgr = Sprites(1.5, key, current_hat)
             img = prev_mgr._render_layer_frame([0])
             self._img_cache.append(img)
 
@@ -652,7 +664,7 @@ class SpeciesSelectorWin:
             latin_lbl = tk.Label(txt_box, text=f"Latin: {data['latin']}", font=("Segoe UI", 8, "italic"), bg=bg_col, fg=self.SUBTEXT, anchor="w")
             latin_lbl.pack(fill="x")
 
-            desc_lbl = tk.Label(txt_box, text=data['desc'], font=("Segoe UI", 8), bg=bg_col, fg=self.TEXT, anchor="w", wraplength=250, justify="left")
+            desc_lbl = tk.Label(txt_box, text=data['desc'], font=("Segoe UI", 8), bg=bg_col, fg=self.TEXT, anchor="w", wraplength=240, justify="left")
             desc_lbl.pack(fill="x")
 
             btn = tk.Button(row, text="Select", font=("Segoe UI", 8, "bold"), bg=self.ACCENT, fg=self.BG, relief="flat", command=lambda k=key: self._choose(k))
@@ -698,7 +710,7 @@ class HatClosetWin:
             row.config(highlightbackground=self.ACCENT if is_active else self.SURFACE)
             row.pack(fill="x", pady=3)
 
-            prev_mgr = Sprites(2, current_species, key)
+            prev_mgr = Sprites(1.5, current_species, key)
             img = prev_mgr._render_layer_frame([0])
             self._img_cache.append(img)
 
@@ -747,12 +759,14 @@ class SettingsWin:
 
         tk.Label(body, text="Appearance & Behavior", font=("Segoe UI", 10, "bold"), bg=self.BG, fg=self.ACCENT).pack(anchor="w", pady=(5, 2))
         
-        # Scale slider
+        # Scale option (1.0x, 1.5x - default, 2.0x, 2.5x, 3.0x)
         s_row = tk.Frame(body, bg=self.BG); s_row.pack(fill="x", pady=3)
-        tk.Label(s_row, text="Size Scale (1x = 32px)", font=("Segoe UI", 9), bg=self.BG, fg=self.TEXT, width=18, anchor="w").pack(side="left")
-        s_scale = tk.Scale(s_row, from_=1, to=4, orient="horizontal", bg=self.BG, fg=self.TEXT, highlightthickness=0, bd=0)
-        s_scale.set(self._cfg.get("scale", 1))
-        s_scale.pack(side="right", fill="x", expand=True)
+        tk.Label(s_row, text="Size Scale", font=("Segoe UI", 9), bg=self.BG, fg=self.TEXT, width=18, anchor="w").pack(side="left")
+        
+        scale_var = tk.DoubleVar(value=float(self._cfg.get("scale", 1.5)))
+        s_menu = tk.OptionMenu(s_row, scale_var, 1.0, 1.5, 2.0, 2.5, 3.0)
+        s_menu.config(bg=self.SURFACE, fg=self.TEXT, activebackground=self.OVERLAY, activeforeground=self.ACCENT, bd=0, highlightthickness=0)
+        s_menu.pack(side="right")
 
         # Speed slider
         sp_row = tk.Frame(body, bg=self.BG); sp_row.pack(fill="x", pady=3)
@@ -778,7 +792,7 @@ class SettingsWin:
         foot.pack(fill="x", side="bottom")
         
         def _do_save():
-            self._cfg["scale"] = s_scale.get()
+            self._cfg["scale"] = float(scale_var.get())
             self._cfg["speed"] = sp_scale.get()
             self._cfg["always_on_top"] = c1_var.get()
             self._cfg["mouse_chasing"] = c2_var.get()
@@ -798,7 +812,7 @@ class SettingsWin:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# MAIN DESKTOP BIRD PET APPLICATION
+# MAIN DESKTOP BIRD PET APPLICATION (Line Perching & Sitting Engine)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class DesktopBird:
@@ -808,14 +822,18 @@ class DesktopBird:
         self.cfg = load_cfg()
         self.screen_w, self.screen_h = work_area()
 
-        self.state     = S.IDLE
-        self.frame_idx = 0
-        self.tick      = 0
-        self._chase_dir = "r"
-        self._w, self._h = 32, 32
+        self.state        = S.IDLE
+        self.frame_idx    = 0
+        self.tick         = 0
+        self._chase_dir   = "r"
+        self.current_line = None # (x1, x2, y_top)
 
-        self.x = int(self.screen_w * 0.75) if self.cfg.get("pos_x", -1) < 0 else self.cfg["pos_x"]
-        self.y = self.screen_h - self._h if self.cfg.get("pos_y", -1) < 0 else self.cfg["pos_y"]
+        scale = float(self.cfg.get("scale", 1.5))
+        self._w = int(round(32 * scale))
+        self._h = int(round(32 * scale))
+
+        self._update_perch_lines()
+        self._snap_to_current_line()
 
         self._build_window()
         self._reload_sprites()
@@ -836,6 +854,22 @@ class DesktopBird:
 
         self.window.after(self.cfg["anim_ms"], self._loop)
         self.window.mainloop()
+
+    def _update_perch_lines(self):
+        self.perch_lines = get_perch_lines(self.screen_w, self.screen_h)
+        if not self.current_line:
+            # Default to primary taskbar top edge line
+            self.current_line = self.perch_lines[0]
+
+    def _snap_to_current_line(self):
+        if self.current_line:
+            x1, x2, line_y = self.current_line
+            if self.cfg.get("pos_x", -1) >= 0:
+                self.x = max(x1, min(x2 - self._w, self.cfg["pos_x"]))
+            else:
+                self.x = int((x1 + x2 - self._w) / 2)
+            # Feet rest directly ON top of line
+            self.y = max(0, line_y - self._h)
 
     def _build_window(self):
         self.window = tk.Tk()
@@ -873,6 +907,8 @@ class DesktopBird:
 
     def _on_release(self, event):
         if self._dragging:
+            # Snap to nearest line on release
+            self._find_nearest_perch_line()
             self.cfg["pos_x"] = self.x
             self.cfg["pos_y"] = self.y
             save_cfg(self.cfg)
@@ -881,12 +917,31 @@ class DesktopBird:
             self._pet()
         self._dragging = False
 
+    def _find_nearest_perch_line(self):
+        self._update_perch_lines()
+        closest_line = self.perch_lines[0]
+        min_dist = 999999
+        bird_bottom = self.y + self._h
+
+        for l in self.perch_lines:
+            x1, x2, line_y = l
+            if x1 <= self.x + self._w // 2 <= x2 or True:
+                dist = abs(bird_bottom - line_y)
+                if dist < min_dist:
+                    min_dist = dist
+                    closest_line = l
+
+        self.current_line = closest_line
+        x1, x2, line_y = self.current_line
+        self.x = max(x1, min(x2 - self._w, self.x))
+        self.y = max(0, line_y - self._h)
+
     def _on_double(self, event):
         if not self._dragging:
             self._show_bubble()
 
     def _reload_sprites(self):
-        scale = int(self.cfg["scale"])
+        scale = float(self.cfg.get("scale", 1.5))
         species_key = self.cfg.get("species", "bluebird")
         hat_key = self.cfg.get("hat", "none")
 
@@ -948,7 +1003,7 @@ class DesktopBird:
     def _open_species_selector(self):
         curr_sp = self.cfg.get("species", "bluebird")
         curr_hat = self.cfg.get("hat", "none")
-        scale = int(self.cfg.get("scale", 1))
+        scale = float(self.cfg.get("scale", 1.5))
         SpeciesSelectorWin(self.window, curr_sp, curr_hat, scale, self._switch_species)
 
     def _open_hat_closet(self):
@@ -977,13 +1032,13 @@ class DesktopBird:
         if self._bubble: self._bubble.close()
         s_data = SPECIES_DATA.get(self.cfg.get("species", "bluebird"), {})
         custom_txt = f"{s_data.get('name', 'Bird')}\n\"{random.choice(MESSAGES)}\""
-        self._bubble = Bubble(self.window, self.x, self.y, self._w, int(self.cfg["scale"]), custom_msg=custom_txt)
+        self._bubble = Bubble(self.window, self.x, self.y, self._w, float(self.cfg.get("scale", 1.5)), custom_msg=custom_txt)
 
     def _open_settings(self):
         SettingsWin(self.window, self.cfg, self._apply_settings)
 
     def _apply_settings(self, new_cfg: dict):
-        scale_changed = int(new_cfg["scale"]) != int(self.cfg["scale"])
+        scale_changed = float(new_cfg["scale"]) != float(self.cfg["scale"])
         sp_changed = new_cfg.get("species") != self.cfg.get("species")
         hat_changed = new_cfg.get("hat") != self.cfg.get("hat")
         self.cfg.update(new_cfg)
@@ -1037,6 +1092,11 @@ class DesktopBird:
 
         speed = int(self.cfg["speed"])
 
+        # Strictly snap bird feet onto flat perch line when sitting/sleeping/bobbing
+        if self.current_line and self.state in (S.IDLE, S.BOB, S.SLEEPING, S.TO_SLEEP, S.FROM_SLEEP, S.HAPPY, S.ANGRY):
+            x1, x2, line_y = self.current_line
+            self.y = line_y - self._h
+
         if self.state == S.IDLE:
             if self.tick > random.randint(15, 40):
                 self._pick_random_state()
@@ -1062,6 +1122,12 @@ class DesktopBird:
             move_speed = speed * 2 if is_flying else speed
             dx = -move_speed if self.state in (S.HOP_L, S.FLY_L) else move_speed
             self.x += dx
+
+            # Lock feet to perch line if hopping
+            if not is_flying and self.current_line:
+                _, _, line_y = self.current_line
+                self.y = line_y - self._h
+
             if self.x <= 0 or self.x >= self.screen_w - self._w:
                 self._clamp_position()
                 self._set_state(S.IDLE)
@@ -1076,6 +1142,7 @@ class DesktopBird:
             dist = (dx * dx + dy * dy) ** 0.5
 
             if dist < 20 or self.tick > 60:
+                self._find_nearest_perch_line()
                 self._set_state(S.BOB)
                 self._play(self._chirp_path)
             else:
@@ -1096,6 +1163,13 @@ class DesktopBird:
             [S.IDLE, S.BOB, S.HOP_L, S.HOP_R, S.FLY_L, S.FLY_R, S.TO_SLEEP],
             weights=[25, 20, 15, 15, 12, 12, 1,],
         )[0]
+
+        # Occasionally switch perch line when flying!
+        if choice in (S.FLY_L, S.FLY_R):
+            self._update_perch_lines()
+            if self.perch_lines:
+                self.current_line = random.choice(self.perch_lines)
+
         if choice == S.BOB and self.cfg["sound"]:
             self._play(self._melody_path)
         self._set_state(choice)
