@@ -75,7 +75,7 @@ DEFAULTS: dict = {
 }
 
 THEMES: dict[str, str] = {
-    "shiro":     "🐱  Shiro (Heterochromia)",
+    "shiro":     "🐱  Shiro",
     "classic":   "🤍  Classic White",
     "black":     "🖤  Midnight Black",
     "orange":    "🧡  Orange Tabby",
@@ -784,10 +784,10 @@ class Sprites:
             blue_eye = mask & (r < 120) & (b > 180)
             brown_eye = mask & (r > 200) & (g > 150) & (b < 120) & (lum < 0.95)
 
-            # Left eye: Ocean Blue
-            out_r[blue_eye] = 30;  out_g[blue_eye] = 144; out_b[blue_eye] = 255
-            # Right eye: Warm Amber / Brown
-            out_r[brown_eye] = 210; out_g[brown_eye] = 105; out_b[brown_eye] = 30
+            # Left eye: Ocean Blue [0, 162, 255]
+            out_r[blue_eye] = 0;   out_g[blue_eye] = 162; out_b[blue_eye] = 255
+            # Right eye: Warm Rich Brown [180, 85, 20]
+            out_r[brown_eye] = 180; out_g[brown_eye] = 85;  out_b[brown_eye] = 20
 
         elif theme == "black":
             # Sleek dark charcoal/black cat with deep contrast
@@ -950,7 +950,7 @@ class Sprites:
         d.polygon([(27, 12), (30, 5), (23, 11)], fill=ear_fill)
         # Eyes (Shiro gets heterochromic eyes: Blue left eye, Brown right eye)
         left_eye_col = "#00a2ff" if self.theme == "shiro" else ("#ffdd44" if self.theme == "black" else "#222222")
-        right_eye_col = "#d35400" if self.theme == "shiro" else ("#ffdd44" if self.theme == "black" else "#222222")
+        right_eye_col = "#b45514" if self.theme == "shiro" else ("#ffdd44" if self.theme == "black" else "#222222")
         d.ellipse([10, 16, 14, 21], fill=left_eye_col)
         d.ellipse([18, 16, 22, 21], fill=right_eye_col)
         d.ellipse([11, 16, 13, 18], fill="#ffffff")
