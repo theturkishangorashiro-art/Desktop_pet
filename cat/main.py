@@ -1221,6 +1221,67 @@ class SettingsWin:
         self._build()
 
 
+class VersionSelectorWin:
+    """Dark-themed modal popup window to choose cat version / skin."""
+
+    BG      = "#1e1e2e"
+    SURFACE = "#313244"
+    OVERLAY = "#45475a"
+    TEXT    = "#cdd6f4"
+    SUBTEXT = "#a6adc8"
+    ACCENT  = "#cba6f7"   # mauve
+    GREEN   = "#a6e3a1"
+    HEADER  = "#181825"
+
+    def __init__(self, parent: tk.Tk, current_theme: str, on_select):
+        self._on_select = on_select
+        self.top = tk.Toplevel(parent)
+        self.top.title("🎨 Select Cat Version")
+        self.top.resizable(False, False)
+        self.top.attributes("-topmost", True)
+        self.top.config(bg=self.BG)
+
+        # Header
+        hdr = tk.Frame(self.top, bg=self.HEADER, pady=12, padx=16)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text="🎨 Choose Cat Version", font=("Segoe UI", 12, "bold"),
+                 bg=self.HEADER, fg=self.ACCENT).pack(anchor="w")
+        tk.Label(hdr, text="Select your favourite cat companion appearance", font=("Segoe UI", 8),
+                 bg=self.HEADER, fg=self.SUBTEXT).pack(anchor="w")
+
+        # Body list of theme buttons
+        body = tk.Frame(self.top, bg=self.BG, padx=16, pady=12)
+        body.pack(fill="both", expand=True)
+
+        for key, label in THEMES.items():
+            is_active = (key == current_theme)
+            bg_col = self.SURFACE if not is_active else self.OVERLAY
+            fg_col = self.GREEN if is_active else self.TEXT
+            border_txt = " ✓ ACTIVE" if is_active else ""
+
+            btn = tk.Button(
+                body, text=f"{label}{border_txt}",
+                font=("Segoe UI", 10, "bold" if is_active else "normal"),
+                bg=bg_col, fg=fg_col,
+                activebackground=self.ACCENT, activeforeground=self.BG,
+                relief="flat", cursor="hand2", anchor="w", padx=12, pady=6,
+                command=lambda k=key: self._choose(k),
+            )
+            btn.pack(fill="x", pady=3)
+
+        # Center on screen
+        self.top.update_idletasks()
+        sw = parent.winfo_screenwidth()
+        sh = parent.winfo_screenheight()
+        w, h = 330, 430
+        self.top.geometry(f"{w}x{h}+{(sw - w)//2}+{(sh - h)//2}")
+
+    def _choose(self, theme_key: str):
+        self._on_select(theme_key)
+        self.top.destroy()
+
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # DESKTOP CAT
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1405,10 +1466,11 @@ class DesktopCat:
             activebackground="#cba6f7", activeforeground="#1e1e2e",
             font=("Segoe UI", 9), bd=0, relief="flat",
         )
-        menu.add_command(label="🐾  Pet Me!",         command=self._pet)
-        menu.add_command(label="😾  Poke (Angry!)",   command=self._anger)
-        menu.add_command(label="💬  Say Something",   command=self._show_bubble)
+        menu.add_command(label="🐾  Pet Me!",                   command=self._pet)
+        menu.add_command(label="😾  Poke (Angry!)",             command=self._anger)
+        menu.add_command(label="💬  Say Something",             command=self._show_bubble)
         menu.add_separator()
+        menu.add_command(label="🎨  Cat Version Selector...",   command=self._open_version_selector)
 
         # Cat Version Submenu
         theme_menu = tk.Menu(
@@ -1422,10 +1484,11 @@ class DesktopCat:
                 self._switch_theme(k)
             theme_menu.add_command(label=t_label, command=set_theme)
 
-        menu.add_cascade(label="🎨  Cat Version",     menu=theme_menu)
-        menu.add_command(label="⚙️   Settings",       command=self._open_settings)
+        menu.add_cascade(label="🎨  Cat Skins Quick Menu",       menu=theme_menu)
         menu.add_separator()
-        menu.add_command(label="❌  Quit",            command=self._quit)
+        menu.add_command(label="⚙️   Settings",                 command=self._open_settings)
+        menu.add_separator()
+        menu.add_command(label="❌  Quit",                      command=self._quit)
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
@@ -1467,6 +1530,11 @@ class DesktopCat:
             self._bubble.close()
         self._bubble = Bubble(self.window, self.x, self.y, self._w,
                               int(self.cfg["scale"]))
+
+    def _open_version_selector(self):
+        """Open the dedicated Cat Version Selector modal."""
+        curr = self.cfg.get("theme", "shiro")
+        VersionSelectorWin(self.window, curr, self._switch_theme)
 
     def _open_settings(self):
         if self._settings and self._settings.top.winfo_exists():
