@@ -664,16 +664,22 @@ def _gen_angry_meow(path: Path, sr: int = 44100) -> None:
 
 
 def ensure_sounds() -> tuple[Path, Path, Path, Path]:
-    """(Re)generate all four cat WAV files. Returns (meow, purr, happy, angry)."""
+    """Ensure all four cat WAV files exist. Uses custom user audio files if present, synthesises fallbacks if missing."""
     _SOUNDS_DIR.mkdir(exist_ok=True)
     meow_path  = _SOUNDS_DIR / "meow.wav"
     purr_path  = _SOUNDS_DIR / "purr.wav"
     happy_path = _SOUNDS_DIR / "happy.wav"
     angry_path = _SOUNDS_DIR / "angry.wav"
-    _gen_meow(meow_path)
-    _gen_purr(purr_path)
-    _gen_happy_meow(happy_path)
-    _gen_angry_meow(angry_path)
+
+    if not meow_path.exists():
+        _gen_meow(meow_path)
+    if not purr_path.exists():
+        _gen_purr(purr_path)
+    if not happy_path.exists():
+        _gen_happy_meow(happy_path)
+    if not angry_path.exists():
+        _gen_angry_meow(angry_path)
+
     return meow_path, purr_path, happy_path, angry_path
 
 
