@@ -65,7 +65,7 @@ _CONFIG_PATH = Path.home() / ".desktop_cat_config.json"
 DEFAULTS: dict = {
     "speed":         3,      # walk pixels per tick
     "scale":         1,      # sprite zoom (1–4)
-    "theme":         "classic", # cat version / skin
+    "theme":         "shiro", # cat version / skin (default = Shiro)
     "anim_ms":       150,    # ms between animation frames
     "always_on_top": True,
     "mouse_chasing": True,
@@ -75,6 +75,7 @@ DEFAULTS: dict = {
 }
 
 THEMES: dict[str, str] = {
+    "shiro":     "🐱  Shiro (Heterochromia)",
     "classic":   "🤍  Classic White",
     "black":     "🖤  Midnight Black",
     "orange":    "🧡  Orange Tabby",
@@ -770,7 +771,25 @@ class Sprites:
 
         out_r, out_g, out_b = r.copy(), g.copy(), b.copy()
 
-        if theme == "black":
+        if theme == "shiro":
+            # Shiro: Pure snow-white cat with heterochromic eyes (Left=Blue, Right=Brown)
+            fur_mask = mask & (lum > 0.2)
+            out_r[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
+            out_g[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
+            out_b[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
+            outline = mask & (lum <= 0.2)
+            out_r[outline] = 55; out_g[outline] = 55; out_b[outline] = 65
+
+            # Eye heterochromia highlights
+            blue_eye = mask & (r < 120) & (b > 180)
+            brown_eye = mask & (r > 200) & (g > 150) & (b < 120) & (lum < 0.95)
+
+            # Left eye: Ocean Blue
+            out_r[blue_eye] = 30;  out_g[blue_eye] = 144; out_b[blue_eye] = 255
+            # Right eye: Warm Amber / Brown
+            out_r[brown_eye] = 210; out_g[brown_eye] = 105; out_b[brown_eye] = 30
+
+        elif theme == "black":
             # Sleek dark charcoal/black cat with deep contrast
             fur_mask = mask & (lum > 0.2)
             out_r[fur_mask] = 30 + (lum[fur_mask] * 60)
@@ -911,6 +930,7 @@ class Sprites:
         img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
         fills = {
+            "shiro":     ("#ffffff", "#666666", "#ffbbbb"),
             "classic":   ("#aaaaaa", "#777777", "#ffbbbb"),
             "black":     ("#333333", "#111111", "#ffdd44"),
             "orange":    ("#ff9933", "#cc5500", "#ffee88"),
@@ -928,9 +948,11 @@ class Sprites:
         d.polygon([(28, 13), (32, 4), (23, 11)], fill=body_fill)
         d.polygon([(5, 12), (2, 5), (9, 11)], fill=ear_fill)
         d.polygon([(27, 12), (30, 5), (23, 11)], fill=ear_fill)
-        # Eyes
-        d.ellipse([10, 16, 14, 21], fill="#222222")
-        d.ellipse([18, 16, 22, 21], fill="#222222")
+        # Eyes (Shiro gets heterochromic eyes: Blue left eye, Brown right eye)
+        left_eye_col = "#00a2ff" if self.theme == "shiro" else ("#ffdd44" if self.theme == "black" else "#222222")
+        right_eye_col = "#d35400" if self.theme == "shiro" else ("#ffdd44" if self.theme == "black" else "#222222")
+        d.ellipse([10, 16, 14, 21], fill=left_eye_col)
+        d.ellipse([18, 16, 22, 21], fill=right_eye_col)
         d.ellipse([11, 16, 13, 18], fill="#ffffff")
         d.ellipse([19, 16, 21, 18], fill="#ffffff")
         # Nose

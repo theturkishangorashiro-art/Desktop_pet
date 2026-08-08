@@ -40,6 +40,7 @@ Switch cat skins in 1-click via Right-Click menu, System Tray menu, or Settings:
 
 | Version | Skin | Description |
 |---|---|---|
+| **Shiro** | 🐱 | Pure snow-white cat with heterochromic eyes (blue & brown) |
 | **Classic White** | 🤍 | Original white & light-grey pixel cat |
 | **Midnight Black** | 🖤 | Sleek dark charcoal cat with yellow eyes |
 | **Orange Tabby** | 🧡 | Warm ginger/orange cat with soft stripes |
