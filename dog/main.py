@@ -418,11 +418,13 @@ class DesktopPet:
         self.frame_idx = 0
         self.tick      = 0
         self._chase_dir = "r"
+        self._w, self._h = 64, 64
+
+        self.x = int(self.screen_w * 0.75) if self.cfg.get("pos_x", -1) < 0 else self.cfg["pos_x"]
+        self.y = self.screen_h - self._h if self.cfg.get("pos_y", -1) < 0 else self.cfg["pos_y"]
+
         self._reload_sprites()
         self._meow_path, self._purr_path, self._happy_path, self._angry_path = ensure_sounds()
-
-        self.x = int(self.screen_w * 0.75) if self.cfg["pos_x"] < 0 else self.cfg["pos_x"]
-        self.y = self.screen_h - self._h if self.cfg["pos_y"] < 0 else self.cfg["pos_y"]
 
         self._dragging       = False
         self._drag_orig_x    = 0
@@ -678,8 +680,9 @@ class DesktopPet:
         self._set_state(choice)
 
     def _clamp_position(self):
-        self.x = max(0, min(self.screen_w - self._w, self.x))
-        self.y = max(0, min(self.screen_h - self._h, self.y))
+        if hasattr(self, "x") and hasattr(self, "y") and hasattr(self, "_w") and hasattr(self, "_h"):
+            self.x = max(0, min(self.screen_w - self._w, self.x))
+            self.y = max(0, min(self.screen_h - self._h, self.y))
 
     def _loop(self):
         if not self._dragging:
