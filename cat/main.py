@@ -65,12 +65,23 @@ _CONFIG_PATH = Path.home() / ".desktop_cat_config.json"
 DEFAULTS: dict = {
     "speed":         3,      # walk pixels per tick
     "scale":         1,      # sprite zoom (1–4)
+    "theme":         "classic", # cat version / skin
     "anim_ms":       150,    # ms between animation frames
     "always_on_top": True,
     "mouse_chasing": True,
     "sound":         True,
     "pos_x":         -1,     # -1 = use default
     "pos_y":         -1,
+}
+
+THEMES: dict[str, str] = {
+    "classic":   "🤍  Classic White",
+    "black":     "🖤  Midnight Black",
+    "orange":    "🧡  Orange Tabby",
+    "calico":    "🤍🧡🖤 Calico Patch",
+    "pink":      "🌸  Pastel Pink",
+    "golden":    "🍯  Golden Honey",
+    "cyberpunk": "⚡  Cyberpunk Neon",
 }
 
 
@@ -734,22 +745,108 @@ MESSAGES = [
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class Sprites:
-    """Loads, scales (nearest-neighbour) and caches sprite frames."""
+    """Loads, scales (nearest-neighbour), colors and caches sprite frames."""
 
     DIR = Path(__file__).parent / "assets"
 
-    def __init__(self, scale: int):
+    def __init__(self, scale: int, theme: str = "classic"):
         self.scale = max(1, int(scale))
+        self.theme = theme if theme in THEMES else "classic"
         self._cache: dict = {}
+
+    @staticmethod
+    def apply_theme(img: "Image.Image", theme: str) -> "Image.Image":
+        """Transform white/light-grey cat sprite into custom theme RGBA colors."""
+        if theme == "classic" or not _PIL:
+            return img
+        import numpy as np
+
+        arr = np.array(img, dtype=np.float32)
+        r, g, b, a = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2], arr[:, :, 3]
+        mask = a > 0
+
+        # Luminance of non-transparent pixels (0 to 1)
+        lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+
+        out_r, out_g, out_b = r.copy(), g.copy(), b.copy()
+
+        if theme == "black":
+            # Sleek dark charcoal/black cat with deep contrast
+            fur_mask = mask & (lum > 0.2)
+            out_r[fur_mask] = 30 + (lum[fur_mask] * 60)
+            out_g[fur_mask] = 32 + (lum[fur_mask] * 62)
+            out_b[fur_mask] = 40 + (lum[fur_mask] * 65)
+            outline = mask & (lum <= 0.2)
+            out_r[outline] = 10; out_g[outline] = 10; out_b[outline] = 14
+
+        elif theme == "orange":
+            # Warm Ginger / Orange Tabby cat
+            fur_mask = mask & (lum > 0.2)
+            out_r[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
+            out_g[fur_mask] = np.minimum(255, lum[fur_mask] * 150)
+            out_b[fur_mask] = np.minimum(255, lum[fur_mask] * 45)
+            outline = mask & (lum <= 0.2)
+            out_r[outline] = 85; out_g[outline] = 38; out_b[outline] = 10
+
+        elif theme == "calico":
+            # Tri-color patch (White, Orange, Charcoal patches)
+            h, w = arr.shape[:2]
+            yy, xx = np.ogrid[:h, :w]
+            patch1 = ((xx // 9 + yy // 9) % 3 == 1) & mask & (lum > 0.28)
+            patch2 = ((xx // 9 + yy // 9) % 3 == 2) & mask & (lum > 0.28)
+            fur_mask = mask & (lum > 0.2)
+            out_r[fur_mask] = lum[fur_mask] * 245
+            out_g[fur_mask] = lum[fur_mask] * 240
+            out_b[fur_mask] = lum[fur_mask] * 235
+            # Orange patches
+            out_r[patch1] = lum[patch1] * 245
+            out_g[patch1] = lum[patch1] * 125
+            out_b[patch1] = lum[patch1] * 35
+            # Black patches
+            out_r[patch2] = lum[patch2] * 40
+            out_g[patch2] = lum[patch2] * 40
+            out_b[patch2] = lum[patch2] * 45
+
+        elif theme == "pink":
+            # Soft Sakura / Pastel Pink cat
+            fur_mask = mask & (lum > 0.2)
+            out_r[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
+            out_g[fur_mask] = np.minimum(255, lum[fur_mask] * 180)
+            out_b[fur_mask] = np.minimum(255, lum[fur_mask] * 215)
+            outline = mask & (lum <= 0.2)
+            out_r[outline] = 120; out_g[outline] = 60; out_b[outline] = 95
+
+        elif theme == "golden":
+            # Warm Golden Honey cat
+            fur_mask = mask & (lum > 0.2)
+            out_r[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
+            out_g[fur_mask] = np.minimum(255, lum[fur_mask] * 205)
+            out_b[fur_mask] = np.minimum(255, lum[fur_mask] * 65)
+            outline = mask & (lum <= 0.2)
+            out_r[outline] = 95; out_g[outline] = 68; out_b[outline] = 15
+
+        elif theme == "cyberpunk":
+            # Cyberpunk Neon: Cyan body with Magenta outline accents
+            fur_mask = mask & (lum > 0.2)
+            out_r[fur_mask] = lum[fur_mask] * 30
+            out_g[fur_mask] = np.minimum(255, lum[fur_mask] * 230)
+            out_b[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
+            outline = mask & (lum <= 0.2)
+            out_r[outline] = 200; out_g[outline] = 20; out_b[outline] = 190
+
+        res = np.stack([out_r, out_g, out_b, a], axis=-1).astype(np.uint8)
+        return Image.fromarray(res, "RGBA")
 
     # ------------------------------------------------------------------
     def _load(self, name: str):
-        key = (name, self.scale)
+        key = (name, self.scale, self.theme)
         if key in self._cache:
             return self._cache[key]
         path = str(self.DIR / name)
         if _PIL:
             im = Image.open(path).convert("RGBA")
+            if self.theme != "classic":
+                im = self.apply_theme(im, self.theme)
             if self.scale != 1:
                 im = im.resize(
                     (im.width * self.scale, im.height * self.scale),
@@ -808,18 +905,29 @@ class Sprites:
 
     # ------------------------------------------------------------------
     def make_tray_image(self) -> "Image.Image | None":
-        """32×32 pixel cat face for system tray."""
+        """32×32 pixel cat face for system tray matching current theme."""
         if not _PIL:
             return None
         img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
+        fills = {
+            "classic":   ("#aaaaaa", "#777777", "#ffbbbb"),
+            "black":     ("#333333", "#111111", "#ffdd44"),
+            "orange":    ("#ff9933", "#cc5500", "#ffee88"),
+            "calico":    ("#e8ded1", "#333333", "#ff9933"),
+            "pink":      ("#ffb6c1", "#e68a9a", "#ffffff"),
+            "golden":    ("#e6b800", "#997a00", "#77ff77"),
+            "cyberpunk": ("#00f0ff", "#ff007f", "#ff00ff"),
+        }
+        body_fill, outline_c, ear_fill = fills.get(self.theme, fills["classic"])
+
         # Body / face ellipse
-        d.ellipse([4, 9, 28, 29], fill="#aaaaaa", outline="#777777", width=1)
+        d.ellipse([4, 9, 28, 29], fill=body_fill, outline=outline_c, width=1)
         # Ears
-        d.polygon([(4, 13), (0, 4), (9, 11)], fill="#aaaaaa")
-        d.polygon([(28, 13), (32, 4), (23, 11)], fill="#aaaaaa")
-        d.polygon([(5, 12), (2, 5), (9, 11)], fill="#ffbbbb")
-        d.polygon([(27, 12), (30, 5), (23, 11)], fill="#ffbbbb")
+        d.polygon([(4, 13), (0, 4), (9, 11)], fill=body_fill)
+        d.polygon([(28, 13), (32, 4), (23, 11)], fill=body_fill)
+        d.polygon([(5, 12), (2, 5), (9, 11)], fill=ear_fill)
+        d.polygon([(27, 12), (30, 5), (23, 11)], fill=ear_fill)
         # Eyes
         d.ellipse([10, 16, 14, 21], fill="#222222")
         d.ellipse([18, 16, 22, 21], fill="#222222")
@@ -831,6 +939,7 @@ class Sprites:
         d.line([(0, 22), (12, 23)], fill="#888888", width=1)
         d.line([(20, 23), (32, 22)], fill="#888888", width=1)
         return img
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -925,7 +1034,7 @@ class SettingsWin:
         self.top.update_idletasks()
         sw = parent.winfo_screenwidth()
         sh = parent.winfo_screenheight()
-        w, h = 380, 460
+        w, h = 380, 510
         self.top.geometry(f"{w}x{h}+{(sw - w)//2}+{(sh - h)//2}")
 
     # ------------------------------------------------------------------
@@ -1009,6 +1118,36 @@ class SettingsWin:
         # Appearance
         section("🎨  Appearance")
         slider_row("Sprite Scale  (× pixels)", "scale", 1, 4)
+
+        # Cat Version / Skin selector
+        theme_row = tk.Frame(body, bg=self.BG)
+        theme_row.pack(fill="x", pady=4)
+        tk.Label(theme_row, text="Cat Version", font=("Segoe UI", 9),
+                 bg=self.BG, fg=self.TEXT, width=20, anchor="w").pack(side="left")
+
+        curr_theme = self._cfg.get("theme", "classic")
+        theme_var = tk.StringVar(value=THEMES.get(curr_theme, THEMES["classic"]))
+
+        def on_theme_select(selected_label):
+            for k, label in THEMES.items():
+                if label == selected_label:
+                    self._cfg["theme"] = k
+                    break
+
+        theme_opt = tk.OptionMenu(
+            theme_row, theme_var, *THEMES.values(), command=on_theme_select
+        )
+        theme_opt.config(
+            bg=self.SURFACE, fg=self.TEXT,
+            activebackground=self.OVERLAY, activeforeground=self.TEXT,
+            font=("Segoe UI", 9), highlightthickness=0, bd=1, relief="flat"
+        )
+        theme_opt["menu"].config(
+            bg=self.SURFACE, fg=self.TEXT,
+            activebackground=self.ACCENT, activeforeground=self.BG,
+            font=("Segoe UI", 9)
+        )
+        theme_opt.pack(side="right", fill="x", expand=True)
 
         # Options
         section("🔧  Options")
@@ -1142,11 +1281,20 @@ class DesktopCat:
 
     def _reload_sprites(self):
         scale = int(self.cfg["scale"])
-        mgr = Sprites(scale)
+        theme = self.cfg.get("theme", "classic")
+        mgr = Sprites(scale, theme)
         self._frames = mgr.load_all()
         self._w, self._h = mgr.sprite_size()
         self._sprite_mgr = mgr
-        self.current_frame = self._frames["idle"][0]
+        # Keep frame index valid for current state
+        state_key = {
+            S.IDLE: "idle", S.WALK_L: "walk_l", S.WALK_R: "walk_r",
+            S.TO_SLEEP: "to_sleep", S.SLEEPING: "sleeping", S.FROM_SLEEP: "from_sleep",
+            S.ANGRY: "angry", S.HAPPY: "happy"
+        }.get(self.state, "idle")
+        frames = self._frames.get(state_key, self._frames["idle"])
+        self.current_frame = frames[self.frame_idx % len(frames)]
+        self.label.config(image=self.current_frame)
 
     # ──────────────────────────────────────────────────────────────────
     # SYSTEM TRAY
@@ -1157,9 +1305,19 @@ class DesktopCat:
         if img is None:
             return
         try:
+            # Theme submenu for System Tray
+            theme_items = [
+                pystray.MenuItem(
+                    label,
+                    lambda *_, k=key: self.window.after(0, lambda: self._switch_theme(k))
+                )
+                for key, label in THEMES.items()
+            ]
+
             menu = pystray.Menu(
                 pystray.MenuItem("Desktop Cat 🐱", None, enabled=False),
                 pystray.Menu.SEPARATOR,
+                pystray.MenuItem("Cat Version", pystray.Menu(*theme_items)),
                 pystray.MenuItem("Show / Hide",
                                  lambda *_: self.window.after(0, self._tray_toggle)),
                 pystray.MenuItem("Say Something",
@@ -1230,6 +1388,20 @@ class DesktopCat:
         menu.add_command(label="😾  Poke (Angry!)",   command=self._anger)
         menu.add_command(label="💬  Say Something",   command=self._show_bubble)
         menu.add_separator()
+
+        # Cat Version Submenu
+        theme_menu = tk.Menu(
+            menu, tearoff=0,
+            bg="#1e1e2e", fg="#cdd6f4",
+            activebackground="#cba6f7", activeforeground="#1e1e2e",
+            font=("Segoe UI", 9), bd=0, relief="flat",
+        )
+        for t_key, t_label in THEMES.items():
+            def set_theme(k=t_key):
+                self._switch_theme(k)
+            theme_menu.add_command(label=t_label, command=set_theme)
+
+        menu.add_cascade(label="🎨  Cat Version",     menu=theme_menu)
         menu.add_command(label="⚙️   Settings",       command=self._open_settings)
         menu.add_separator()
         menu.add_command(label="❌  Quit",            command=self._quit)
@@ -1281,11 +1453,19 @@ class DesktopCat:
             return
         self._settings = SettingsWin(self.window, self.cfg, self._apply_settings)
 
+    def _switch_theme(self, theme_key: str):
+        """Switch cat version skin dynamically."""
+        if self.cfg.get("theme") != theme_key:
+            self.cfg["theme"] = theme_key
+            save_cfg(self.cfg)
+            self._reload_sprites()
+
     def _apply_settings(self, new_cfg: dict):
         scale_changed = int(new_cfg["scale"]) != int(self.cfg["scale"])
+        theme_changed = new_cfg.get("theme") != self.cfg.get("theme")
         self.cfg.update(new_cfg)
         self.window.attributes("-topmost", bool(self.cfg["always_on_top"]))
-        if scale_changed:
+        if scale_changed or theme_changed:
             self._reload_sprites()
             # Re-clamp so cat isn't partially off-screen
             self._clamp_position()

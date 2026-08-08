@@ -35,11 +35,25 @@ Access via right-click → Settings or the tray icon:
 - Toggle: Mouse Chasing
 - Toggle: Sound Effects
 
+### 🎨 7 Selectable Cat Versions / Skins
+Switch cat skins in 1-click via Right-Click menu, System Tray menu, or Settings:
+
+| Version | Skin | Description |
+|---|---|---|
+| **Classic White** | 🤍 | Original white & light-grey pixel cat |
+| **Midnight Black** | 🖤 | Sleek dark charcoal cat with yellow eyes |
+| **Orange Tabby** | 🧡 | Warm ginger/orange cat with soft stripes |
+| **Calico Patch** | 🤍🧡🖤 | Tri-color patch cat (white, orange & black) |
+| **Pastel Pink** | 🌸 | Soft sakura pastel pink cute cat |
+| **Golden Honey** | 🍯 | Warm golden honey cat |
+| **Cyberpunk Neon** | ⚡ | Electric cyan & magenta glowing cat |
+
 ### Technical
 - 🎨 Nearest-neighbour sprite scaling for crisp pixel art at any size
+- 🌈 Dynamic RGBA recoloring engine for real-time skin switching
 - 💾 Config persisted to `~/.desktop_cat_config.json`
 - 🖥️ Multi-monitor work-area detection (taskbar-aware)
-- 🔊 Optional sound effects via `winsound` (Windows built-in)
+- 🔊 Acoustic source-filter synthesised sounds (meow, purr, happy chirp, angry yowl)
 - ✅ Graceful fallbacks if optional dependencies are not installed
 
 ---
