@@ -162,7 +162,12 @@ from pathlib import Path
 from enum import Enum, auto
 
 import tkinter as tk
-from PIL import Image, ImageTk, ImageDraw
+
+try:
+    from PIL import Image, ImageTk, ImageDraw
+    _PIL = True
+except ImportError:
+    _PIL = False
 
 try:
     import pystray
@@ -307,8 +312,8 @@ class Sprites:
         self._cache: dict = {{}}
 
     @staticmethod
-    def apply_theme(img: Image.Image, theme: str) -> Image.Image:
-        if theme == "{default_theme}":
+    def apply_theme(img, theme: str):
+        if theme == "{default_theme}" or not _PIL:
             return img
         import numpy as np
         arr = np.array(img, dtype=np.float32)
@@ -344,12 +349,17 @@ class Sprites:
         if key in self._cache:
             return self._cache[key]
         path = str(self.DIR / name)
-        im = Image.open(path).convert("RGBA")
-        if self.theme != "{default_theme}":
-            im = self.apply_theme(im, self.theme)
-        if self.scale != 1:
-            im = im.resize((im.width * self.scale, im.height * self.scale), Image.NEAREST)
-        ph = ImageTk.PhotoImage(im)
+        if _PIL:
+            im = Image.open(path).convert("RGBA")
+            if self.theme != "{default_theme}":
+                im = self.apply_theme(im, self.theme)
+            if self.scale != 1:
+                im = im.resize((im.width * self.scale, im.height * self.scale), Image.NEAREST)
+            ph = ImageTk.PhotoImage(im)
+        else:
+            ph = tk.PhotoImage(file=path)
+            if self.scale > 1:
+                ph = ph.zoom(self.scale, self.scale)
         self._cache[key] = ph
         return ph
 
@@ -357,8 +367,11 @@ class Sprites:
         return [self._load(n) for n in names]
 
     def sprite_size(self) -> tuple[int, int]:
-        im = Image.open(str(self.DIR / "idle1.png"))
-        return im.width * self.scale, im.height * self.scale
+        if _PIL:
+            im = Image.open(str(self.DIR / "idle1.png"))
+            return im.width * self.scale, im.height * self.scale
+        ph = self._load("idle1.png")
+        return ph.width(), ph.height()
 
     def load_all(self) -> dict:
         return {{
@@ -372,7 +385,9 @@ class Sprites:
             "happy":      self.seq("happy1.png", "happy2.png", "happy3.png", "happy4.png"),
         }}
 
-    def make_tray_image(self) -> Image.Image:
+    def make_tray_image(self):
+        if not _PIL:
+            return None
         img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
         fills = {fills_dict}
