@@ -1215,12 +1215,16 @@ class DesktopCat:
         # Build main window first (needed for PhotoImage)
         self._build_window()
 
+        # Initial State
+        self.state      = S.IDLE
+        self.frame_idx  = 0
+        self.tick       = 0    # frames in current state
+
         # Now load sprites
         self._reload_sprites()
 
         # Generate / locate sound files (pure-Python synthesis, runs once)
         self._meow_path, self._purr_path, self._happy_path, self._angry_path = ensure_sounds()
-
 
         if self.cfg["pos_x"] >= 0 and self.cfg["pos_y"] >= 0:
             self.x = self.cfg["pos_x"]
@@ -1228,11 +1232,6 @@ class DesktopCat:
         else:
             self.x = int(self.screen_w * 0.75)
             self.y = self.screen_h - self._h
-
-        # State
-        self.state      = S.IDLE
-        self.frame_idx  = 0
-        self.tick       = 0    # frames in current state
         self._chase_dir = "r"  # "l" or "r"
 
         # Input state
