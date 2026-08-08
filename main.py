@@ -1,7 +1,8 @@
 """
-Desktop Bird 🐦 — Enhanced Edition
+Desktop Bird 🐦 — Pocket Bird Enhanced Edition
 Based on Pocket-Bird by @matthew-r-callaghan
-Featuring 34 Bird Species, 12 Wearable Hats, Birdsong Voice Synthesis,
+Featuring 34 Bird Species, 12 Wearable Hats, Authentic Wing-Flapping Animations,
+Isolated Heart Particles (petting only), 1/3 Compact Size, Birdsong Voice Synthesis,
 Mouse Chasing, Interactive Dragging, Speech Bubbles, and Catppuccin Dark UI.
 """
 
@@ -53,17 +54,19 @@ except ImportError:
 _CONFIG_PATH = Path.home() / ".desktop_bird_config.json"
 
 DEFAULTS: dict = {
-    "speed":         4,          # movement speed
-    "scale":         3,          # sprite scale (1x = 32px, 3x = 96px)
+    "speed":         3,          # movement speed
+    "scale":         1,          # sprite scale (1x = 32px - 1/3 compact size)
     "species":       "bluebird", # default species
     "hat":           "none",     # default hat
-    "anim_ms":       120,        # animation frame delay
+    "anim_ms":       90,         # fast, smooth wing-flapping frame delay
     "always_on_top": True,
     "mouse_chasing": True,
     "sound":         True,
     "pos_x":         -1,
     "pos_y":         -1,
 }
+
+TUFTED_SPECIES = {"tuftedTitmouse", "redCardinal", "blueJay", "stellarsJay"}
 
 SPECIES_DATA = {
     "bluebird": {
@@ -346,7 +349,7 @@ def _write_wav(path: Path, frames: list, sample_rate: int = 44100) -> None:
         wf.setframerate(sample_rate)
         wf.writeframes(b"".join(frames))
 
-def _gen_bird_chirp(path: Path, f_start: float = 2200, f_peak: float = 3500, f_end: float = 1800, dur: float = 0.25) -> None:
+def _gen_bird_chirp(path: Path, f_start: float = 2200, f_peak: float = 3500, f_end: float = 1800, dur: float = 0.22) -> None:
     sr = 44100
     n = int(sr * dur)
     frames = []
@@ -397,7 +400,7 @@ def work_area() -> tuple[int, int]:
 
 class S(Enum):
     IDLE       = auto()
-    SINGING    = auto()
+    BOB        = auto()
     FLY_L      = auto()
     FLY_R      = auto()
     HOP_L      = auto()
@@ -411,10 +414,23 @@ class S(Enum):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SPRITE MANAGER
+# AUTHENTIC SPRITE LAYER RENDERER (Wing Flapping & Isolated Heart Particles)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class Sprites:
+    """
+    birb.png slice index mapping (10 slices of 32x32):
+    0: base
+    1: headDown
+    2: heartOne
+    3: heartTwo
+    4: heartThree
+    5: tuftBase
+    6: tuftDown
+    7: wingsUp
+    8: wingsDown
+    9: happyEye
+    """
     DIR = Path(__file__).parent / "assets"
 
     def __init__(self, scale: int, species_key: str = "bluebird", hat_key: str = "none"):
@@ -427,24 +443,38 @@ class Sprites:
         self.species_img = Image.open(str(self.DIR / "species.png")).convert("RGBA")
         self.hats_img = Image.open(str(self.DIR / "hats.png")).convert("RGBA")
 
-    def _render_frame(self, frame_idx: int, flip_l: bool = False) -> ImageTk.PhotoImage:
+    def _render_layer_frame(self, slice_indices: list, flip_l: bool = False) -> ImageTk.PhotoImage:
         s_idx = SPECIES_DATA[self.species_key]["spriteIndex"]
         h_idx = HATS_DATA[self.hat_key]["idx"]
+        has_tuft = self.species_key in TUFTED_SPECIES
 
-        key = (frame_idx, s_idx, h_idx, self.scale, flip_l)
+        key = (tuple(slice_indices), s_idx, h_idx, self.scale, flip_l, has_tuft)
         if key in self._cache:
             return self._cache[key]
 
-        b_frame = self.birb_img.crop((frame_idx * 32, 0, (frame_idx + 1) * 32, 32))
-        s_mask  = self.species_img.crop((s_idx * 32, 0, (s_idx + 1) * 32, 32))
-
+        s_mask = self.species_img.crop((s_idx * 32, 0, (s_idx + 1) * 32, 32))
         out = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-        out.alpha_composite(s_mask)
-        out.alpha_composite(b_frame)
 
+        # 1. Color mask
+        out.alpha_composite(s_mask)
+
+        # 2. Base birb slices
+        for idx in slice_indices:
+            b_slice = self.birb_img.crop((idx * 32, 0, (idx + 1) * 32, 32))
+            out.alpha_composite(b_slice)
+
+        # 3. Crested bird tuft
+        if has_tuft:
+            tuft_idx = 6 if 1 in slice_indices else 5 # tuftDown if headDown else tuftBase
+            t_slice = self.birb_img.crop((tuft_idx * 32, 0, (tuft_idx + 1) * 32, 32))
+            out.alpha_composite(t_slice)
+
+        # 4. Hat placement
         if h_idx >= 0 and h_idx * 12 < self.hats_img.width:
             h_frame = self.hats_img.crop((h_idx * 12, 0, (h_idx + 1) * 12, 12))
-            out.alpha_composite(h_frame, (10, 1))
+            # Adjust hat position if head is down vs normal
+            hat_y = 2 if 1 in slice_indices else 1
+            out.alpha_composite(h_frame, (10, hat_y))
 
         if flip_l:
             out = out.transpose(Image.FLIP_LEFT_RIGHT)
@@ -461,18 +491,57 @@ class Sprites:
         return sz, sz
 
     def load_all(self) -> dict:
+        # Authentic Pocket-Bird animation layer compositions:
         return {
-            "idle":       [self._render_frame(0), self._render_frame(1)],
-            "singing":    [self._render_frame(2), self._render_frame(0)],
-            "fly_r":      [self._render_frame(3), self._render_frame(4)],
-            "fly_l":      [self._render_frame(3, flip_l=True), self._render_frame(4, flip_l=True)],
-            "hop_r":      [self._render_frame(5), self._render_frame(6)],
-            "hop_l":      [self._render_frame(5, flip_l=True), self._render_frame(6, flip_l=True)],
-            "to_sleep":   [self._render_frame(7)],
-            "sleeping":   [self._render_frame(7), self._render_frame(8)],
-            "from_sleep": [self._render_frame(7), self._render_frame(0)],
-            "happy":      [self._render_frame(9), self._render_frame(2)],
-            "angry":      [self._render_frame(2), self._render_frame(1)],
+            # Idle perching
+            "idle": [
+                self._render_layer_frame([0]),
+            ],
+            # Head bobbing
+            "bob": [
+                self._render_layer_frame([0]),
+                self._render_layer_frame([1]),
+            ],
+            # Wing-flapping flying (authentic 4-frame flight cycle!)
+            "fly_r": [
+                self._render_layer_frame([0]),           # Base body
+                self._render_layer_frame([0, 7]),        # Wings UP!
+                self._render_layer_frame([1]),           # Head down
+                self._render_layer_frame([0, 8]),        # Wings DOWN!
+            ],
+            "fly_l": [
+                self._render_layer_frame([0], flip_l=True),
+                self._render_layer_frame([0, 7], flip_l=True),
+                self._render_layer_frame([1], flip_l=True),
+                self._render_layer_frame([0, 8], flip_l=True),
+            ],
+            # Taskbar hopping
+            "hop_r": [
+                self._render_layer_frame([0]),
+                self._render_layer_frame([1]),
+            ],
+            "hop_l": [
+                self._render_layer_frame([0], flip_l=True),
+                self._render_layer_frame([1], flip_l=True),
+            ],
+            # Sleeping (Tuck head under wing — NO HEARTS!)
+            "to_sleep":   [self._render_layer_frame([1])],
+            "sleeping":   [self._render_layer_frame([1])],
+            "from_sleep": [self._render_layer_frame([0])],
+
+            # Petting ONLY (Floating Heart particles!)
+            "happy": [
+                self._render_layer_frame([0, 9, 2]),    # Happy eye + Heart 1
+                self._render_layer_frame([0, 9, 3]),    # Happy eye + Heart 2
+                self._render_layer_frame([0, 9, 4]),    # Happy eye + Heart 3
+                self._render_layer_frame([0, 9, 3]),    # Happy eye + Heart 2
+            ],
+
+            # Poke (Grumpy ruffle)
+            "angry": [
+                self._render_layer_frame([1, 8]),
+                self._render_layer_frame([0, 7]),
+            ],
         }
 
     def make_tray_image(self) -> Image.Image:
@@ -506,17 +575,17 @@ class Bubble:
         self.top.config(bg="#010101")
 
         msg = custom_msg if custom_msg else random.choice(MESSAGES)
-        frm = tk.Frame(self.top, bg="#1e1e2e", padx=12, pady=8, bd=1, relief="solid")
+        frm = tk.Frame(self.top, bg="#1e1e2e", padx=10, pady=6, bd=1, relief="solid")
         frm.config(highlightbackground="#89b4fa", highlightthickness=1)
         frm.pack()
 
-        lbl = tk.Label(frm, text=msg, font=("Segoe UI", 9, "bold"), bg="#1e1e2e", fg="#cdd6f4")
+        lbl = tk.Label(frm, text=msg, font=("Segoe UI", 8, "bold"), bg="#1e1e2e", fg="#cdd6f4")
         lbl.pack()
 
         self.top.update_idletasks()
         bw, bh = self.top.winfo_width(), self.top.winfo_height()
         bx = max(10, pet_x + (pet_w - bw) // 2)
-        by = max(10, pet_y - bh - 8)
+        by = max(10, pet_y - bh - 6)
         self.top.geometry(f"{bw}x{bh}+{bx}+{by}")
         self.top.after(3500, self.close)
 
@@ -544,7 +613,6 @@ class SpeciesSelectorWin:
         hdr.pack(fill="x")
         tk.Label(hdr, text="🐦 Choose Bird Species (34 Species)", font=("Segoe UI", 12, "bold"), bg=self.HEADER, fg=self.ACCENT).pack(anchor="w")
 
-        # Scrollable container
         canvas = tk.Canvas(self.top, bg=self.BG, highlightthickness=0)
         scrollbar = tk.Scrollbar(self.top, orient="vertical", command=canvas.yview)
         scroll_frame = tk.Frame(canvas, bg=self.BG)
@@ -556,7 +624,6 @@ class SpeciesSelectorWin:
         canvas.pack(side="left", fill="both", expand=True, padx=12, pady=8)
         scrollbar.pack(side="right", fill="y", pady=8)
 
-        mgr = Sprites(2, current_species, current_hat)
         self._img_cache = []
 
         for key, data in SPECIES_DATA.items():
@@ -569,9 +636,8 @@ class SpeciesSelectorWin:
             row.config(highlightbackground=self.ACCENT if is_active else self.SURFACE)
             row.pack(fill="x", pady=4, padx=4)
 
-            # Icon preview
             prev_mgr = Sprites(2, key, current_hat)
-            img = prev_mgr._render_frame(0)
+            img = prev_mgr._render_layer_frame([0])
             self._img_cache.append(img)
 
             img_lbl = tk.Label(row, image=img, bg=bg_col)
@@ -586,7 +652,7 @@ class SpeciesSelectorWin:
             latin_lbl = tk.Label(txt_box, text=f"Latin: {data['latin']}", font=("Segoe UI", 8, "italic"), bg=bg_col, fg=self.SUBTEXT, anchor="w")
             latin_lbl.pack(fill="x")
 
-            desc_lbl = tk.Label(txt_box, text=data['desc'], font=("Segoe UI", 8), bg=bg_col, fg=self.TEXT, anchor="w", wraplength=260, justify="left")
+            desc_lbl = tk.Label(txt_box, text=data['desc'], font=("Segoe UI", 8), bg=bg_col, fg=self.TEXT, anchor="w", wraplength=250, justify="left")
             desc_lbl.pack(fill="x")
 
             btn = tk.Button(row, text="Select", font=("Segoe UI", 8, "bold"), bg=self.ACCENT, fg=self.BG, relief="flat", command=lambda k=key: self._choose(k))
@@ -632,9 +698,8 @@ class HatClosetWin:
             row.config(highlightbackground=self.ACCENT if is_active else self.SURFACE)
             row.pack(fill="x", pady=3)
 
-            # Icon preview
             prev_mgr = Sprites(2, current_species, key)
-            img = prev_mgr._render_frame(0)
+            img = prev_mgr._render_layer_frame([0])
             self._img_cache.append(img)
 
             img_lbl = tk.Label(row, image=img, bg=bg_col)
@@ -684,16 +749,16 @@ class SettingsWin:
         
         # Scale slider
         s_row = tk.Frame(body, bg=self.BG); s_row.pack(fill="x", pady=3)
-        tk.Label(s_row, text="Size Scale (1x-4x)", font=("Segoe UI", 9), bg=self.BG, fg=self.TEXT, width=18, anchor="w").pack(side="left")
+        tk.Label(s_row, text="Size Scale (1x = 32px)", font=("Segoe UI", 9), bg=self.BG, fg=self.TEXT, width=18, anchor="w").pack(side="left")
         s_scale = tk.Scale(s_row, from_=1, to=4, orient="horizontal", bg=self.BG, fg=self.TEXT, highlightthickness=0, bd=0)
-        s_scale.set(self._cfg.get("scale", 3))
+        s_scale.set(self._cfg.get("scale", 1))
         s_scale.pack(side="right", fill="x", expand=True)
 
         # Speed slider
         sp_row = tk.Frame(body, bg=self.BG); sp_row.pack(fill="x", pady=3)
         tk.Label(sp_row, text="Flight/Hop Speed", font=("Segoe UI", 9), bg=self.BG, fg=self.TEXT, width=18, anchor="w").pack(side="left")
         sp_scale = tk.Scale(sp_row, from_=1, to=12, orient="horizontal", bg=self.BG, fg=self.TEXT, highlightthickness=0, bd=0)
-        sp_scale.set(self._cfg.get("speed", 4))
+        sp_scale.set(self._cfg.get("speed", 3))
         sp_scale.pack(side="right", fill="x", expand=True)
 
         # Checkboxes
@@ -737,7 +802,7 @@ class SettingsWin:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class DesktopBird:
-    _DRAG_THRESHOLD = 4
+    _DRAG_THRESHOLD = 3
 
     def __init__(self):
         self.cfg = load_cfg()
@@ -747,7 +812,7 @@ class DesktopBird:
         self.frame_idx = 0
         self.tick      = 0
         self._chase_dir = "r"
-        self._w, self._h = 96, 96
+        self._w, self._h = 32, 32
 
         self.x = int(self.screen_w * 0.75) if self.cfg.get("pos_x", -1) < 0 else self.cfg["pos_x"]
         self.y = self.screen_h - self._h if self.cfg.get("pos_y", -1) < 0 else self.cfg["pos_y"]
@@ -883,7 +948,7 @@ class DesktopBird:
     def _open_species_selector(self):
         curr_sp = self.cfg.get("species", "bluebird")
         curr_hat = self.cfg.get("hat", "none")
-        scale = int(self.cfg.get("scale", 3))
+        scale = int(self.cfg.get("scale", 1))
         SpeciesSelectorWin(self.window, curr_sp, curr_hat, scale, self._switch_species)
 
     def _open_hat_closet(self):
@@ -937,7 +1002,7 @@ class DesktopBird:
             return self._frames["fly_l" if self._chase_dir == "l" else "fly_r"]
         return {
             S.IDLE:       self._frames["idle"],
-            S.SINGING:    self._frames["singing"],
+            S.BOB:        self._frames["bob"],
             S.FLY_L:      self._frames["fly_l"],
             S.FLY_R:      self._frames["fly_r"],
             S.HOP_L:      self._frames["hop_l"],
@@ -976,7 +1041,7 @@ class DesktopBird:
             if self.tick > random.randint(15, 40):
                 self._pick_random_state()
 
-        elif self.state == S.SINGING:
+        elif self.state == S.BOB:
             if self.tick > 25:
                 self._set_state(S.IDLE)
 
@@ -1010,11 +1075,11 @@ class DesktopBird:
             dy = my - cy
             dist = (dx * dx + dy * dy) ** 0.5
 
-            if dist < 28 or self.tick > 60:
-                self._set_state(S.SINGING)
+            if dist < 20 or self.tick > 60:
+                self._set_state(S.BOB)
                 self._play(self._chirp_path)
             else:
-                chase_speed = min(speed * 2, 16)
+                chase_speed = min(speed * 2, 14)
                 self.x += int(dx / dist * chase_speed)
                 self.y += int(dy / dist * chase_speed)
                 self._clamp_position()
@@ -1028,10 +1093,10 @@ class DesktopBird:
 
     def _pick_random_state(self):
         choice = random.choices(
-            [S.IDLE, S.SINGING, S.HOP_L, S.HOP_R, S.FLY_L, S.FLY_R, S.TO_SLEEP],
+            [S.IDLE, S.BOB, S.HOP_L, S.HOP_R, S.FLY_L, S.FLY_R, S.TO_SLEEP],
             weights=[25, 20, 15, 15, 12, 12, 1,],
         )[0]
-        if choice == S.SINGING and self.cfg["sound"]:
+        if choice == S.BOB and self.cfg["sound"]:
             self._play(self._melody_path)
         self._set_state(choice)
 
