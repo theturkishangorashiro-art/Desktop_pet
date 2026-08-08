@@ -1,77 +1,108 @@
-# 🐱 Desktop Cat — Shiro & Custom Skins Edition
+# 🐦 Desktop Bird — Pocket Bird Enhanced Edition
 
-<img src="cat/idling.gif" alt="Desktop Cat idling"/>
+A delightful, animated desktop companion that lives on your screen — perches, sings, hops, flies, wears stylish hats, chases your mouse cursor, and keeps you company!
 
-> A delightful interactive desktop companion that lives on your screen —
-> sleeps, wanders, chases your cursor, and keeps you company!
+*Based on [Pocket-Bird](https://github.com/matthew-r-callaghan/Pocket-Bird) by Matthew Callaghan.*
 
 ---
 
 ## ✨ Features
 
-### Behaviours & States
+### Behaviours & Animations
 | State | Description |
 |---|---|
-| **Idle** | Sits and plays through idle animations |
-| **Walking** | Strolls left or right across the screen |
-| **Sleeping** | Falls asleep with ZZZ animation, wakes up later |
-| **Chasing** | Runs toward your cursor when it moves |
-| **Happy** | Plays a bright animation when you pet them |
-| **Angry** | Grumbles briefly when disturbed mid-nap |
-
-### Interactivity
-- 🖱️ **Left-click** — Pet the cat (happy animation + chirp)
-- 🖱️ **Double-click** — Show a random speech bubble message
-- 🖱️ **Right-click** — Context menu (Pet, Poke, Say Something, Version Selector, Settings, Quit)
-- 🖱️ **Drag** — Pick up and reposition the cat anywhere on screen
-- 🖎  **System tray** icon with full menu *(requires Pillow + pystray)*
+| **Idle / Perch** | Perches comfortably and head-bobs |
+| **Singing** | Opens beak and sings cheerful melodies with audio |
+| **Hopping** | Hops along your desktop taskbar |
+| **Flying** | Soars left or right across the screen |
+| **Sleeping** | Tucks head under wing with ZZZ bubbles |
+| **Chasing** | Flies/hops toward your mouse cursor in real time |
+| **Happy** | Flutters wings with heart particles when petted |
+| **Grumpy** | Ruffles feathers briefly when poked mid-nap |
 
 ---
 
-### 🎨 8 Selectable Cat Versions / Skins
-Switch cat skins in 1-click via Right-Click Version Selector modal, System Tray menu, or Settings:
+### 🎨 34 Selectable Bird Species
+Switch between 34 real-world bird species using the **Bird Species Selector** modal (Right-Click → Bird Species Selector):
 
-| Version | Skin | Description |
-|---|---|---|
-| **Shiro** | 🐱 | Pure snow-white cat with heterochromic eyes (left: blue, right: brown) |
-| **Classic White** | 🤍 | Original white & light-grey pixel cat |
-| **Midnight Black** | 🖤 | Sleek dark charcoal cat with yellow eyes |
-| **Orange Tabby** | 🧡 | Warm ginger/orange cat with soft stripes |
-| **Calico Patch** | 🤍🧡🖤 | Tri-color patch cat (white, orange & black) |
-| **Pastel Pink** | 🌸 | Soft sakura pastel pink cute cat |
-| **Golden Honey** | 🍯 | Warm golden honey cat |
-| **Cyberpunk Neon** | ⚡ | Electric cyan & magenta glowing cat |
+- 🐦 **Eastern Bluebird** (*Sialia sialis*)
+- ❄️ **Shima Enaga** (*Aegithalos caudatus*) — Fluffy Hokkaido long-tailed tit
+- 💜 **Tufted Titmouse** (*Baeolophus bicolor*)
+- 🧡 **European Robin** (*Erithacus rubecula*)
+- ❤️ **Red Cardinal** (*Cardinalis cardinalis*)
+- 💛 **American Goldfinch** (*Spinus tristis*)
+- 💙 **Barn Swallow** (*Hirundo rustica*)
+- 🇦🇺 **Mistletoebird** (*Dicaeum hirundinaceum*)
+- ❤️ **Scarlet Robin** (*Petroica boodang*)
+- 🧡 **American Robin** (*Turdus migratorius*)
+- 🤎 **Carolina Wren** (*Thryothorus ludovicianus*)
+- 🖤 **Black-capped Chickadee** (*Poecile atricapillus*)
+- 🪶 **Blue Jay** (*Cyanocitta cristata*)
+- 🩶 **Dark-eyed Junco** (*Junco hyemalis*)
+- ❤️ **House Finch** (*Haemorhous mexicanus*)
+- 🖤❤️ **Red-winged Blackbird** (*Agelaius phoeniceus*)
+- 🐦‍⬛ **Rock Pigeon** (*Columba livia*)
+- ❤️ **Red Avadavat** (*Amandava amandava*)
+- 🌸 **Pink Robin** (*Petroica rodinogaster*)
+- 🩵 **Spangled Cotinga** (*Cotinga cayana*)
+- 💙💛 **Elegant Euphonia** (*Euphonia elegantissima*)
+- 🎨 **Painted Bunting** (*Passerina ciris*)
+- ❤️ **Red Warbler** (*Cardellina rubra*)
+- 🇨🇺 **Cuban Tody** (*Todus multicolor*)
+- 💜 **Violet-backed Starling** (*Cinnyricinclus leucogaster*)
+- 💙 **Steller's Jay** (*Cyanocitta stelleri*)
+- 🕊️ **Mourning Dove** (*Zenaida macroura*)
+- 💙 **White-winged Fairywren** (*Malurus leucopterus*)
+- ⬛ **Little Crow** (*Corvus bennetti*)
+- ❤️ **Redpoll** (*Acanthis flammea*)
+- 🎮 **Pidgey** (*Avis pidgeot*)
 
 ---
 
-## 🚀 Getting Started
+### 🎩 12 Wearable Hats
+Customize your bird with stylish hats in the **Hat Closet** (Right-Click → Wearable Hat Closet):
 
-### Installation & Run
+1. 👒 **No Hat / Invisible Hat**
+2. 🎩 **Top Hat**
+3. 🛡️ **Viking Helmet**
+4. 🤠 **Cowboy Hat**
+5. 🪄 **Fez**
+6. 🧙‍♂️ **Wizard Hat**
+7. 🧢 **Baseball Cap**
+8. 🌸 **Flower Hat**
+9. 🧶 **Beanie**
+10. 👒 **Sun Hat**
+11. 🌾 **Straw Hat**
+12. 🇪🇸 **Cordovan Hat**
+
+---
+
+## 🕹️ Interactivity & Controls
+
+| Input | Action |
+|---|---|
+| Left-click | Pet the bird 🐦 |
+| Double-click | Show speech bubble with bird facts 💬 |
+| Right-click | Open context menu ⚙️ |
+| Click + drag | Move bird anywhere on screen |
+| `Esc` | Quit |
+| System Tray | Species selector, hat closet, settings, quit |
+
+---
+
+## 🚀 How to Run
 
 ```bash
-# Clone the repo
+# Clone the repository
 git clone https://github.com/theturkishangorashiro-art/Desktop_pet.git
-cd Desktop_pet/cat
+cd Desktop_pet
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Launch Desktop Cat
+# Launch Desktop Bird
 python main.py
 ```
-
----
-
-## 🕹️ Controls
-
-| Input | Action |
-|---|---|
-| Left-click | Pet the cat 🐾 |
-| Double-click | Show speech bubble 💬 |
-| Right-click | Open context menu ⚙️ |
-| Click + drag | Move cat anywhere on screen |
-| `Esc` | Quit |
-| Tray icon | Show / hide, version selector, settings, quit |
 
 ---
 
