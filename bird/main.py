@@ -1,9 +1,9 @@
 """
 Desktop Bird 🐦 — Pocket Bird Enhanced Edition
 Based on Pocket-Bird by @matthew-r-callaghan
-Featuring 34 Bird Species, 12 Wearable Hats, Authentic Wing-Flapping Animations,
-Display Screen Text & Line Perching Engine (detects text lines & horizontal lines __________________________ on websites/apps),
-1.5x Size (48px), Isolated Heart Particles (petting only), Birdsong Voice Synthesis, and Catppuccin UI.
+Featuring 34 Unique Bird Species, 12 Wearable Hats, Authentic Wing-Flapping Animations,
+Facing-Direction Fix (faces the direction of movement), Palette-Recolored Species Engine,
+Display Screen Text & Line Perching Engine, 1.5x Size (48px), Birdsong Audio Synthesis, and Catppuccin UI.
 """
 
 import os
@@ -184,98 +184,98 @@ SPECIES_DATA = {
         "name": "Red-winged Blackbird 🖤❤️",
         "latin": "Agelaius phoeniceus",
         "desc": "Black bird with vivid red and yellow shoulder patches.",
-        "spriteIndex": 15,
-        "color": "#202020"
+        "spriteIndex": 28,
+        "color": "#fc2e00"
     },
     "pigeon": {
         "name": "Rock Pigeon 🐦‍⬛",
         "latin": "Columba livia",
         "desc": "Urban acrobat with iridescent neck feathers.",
-        "spriteIndex": 16,
+        "spriteIndex": 15,
         "color": "#808590"
     },
     "redAvadavat": {
         "name": "Red Avadavat ❤️",
         "latin": "Amandava amandava",
         "desc": "Sparrow-sized finch with white speckles on crimson feathers.",
-        "spriteIndex": 17,
+        "spriteIndex": 16,
         "color": "#e02020"
     },
     "pinkRobin": {
         "name": "Pink Robin 🌸",
         "latin": "Petroica rodinogaster",
         "desc": "Rare, stunning pink-breasted robin from southeastern Australia.",
-        "spriteIndex": 18,
+        "spriteIndex": 17,
         "color": "#ff60a0"
     },
     "spangledCotinga": {
         "name": "Spangled Cotinga 🩵",
         "latin": "Cotinga cayana",
         "desc": "Amazon rainforest bird with brilliant turquoise and purple throat.",
-        "spriteIndex": 19,
+        "spriteIndex": 18,
         "color": "#00bcd4"
     },
     "elegantEuphonia": {
         "name": "Elegant Euphonia 💙💛",
         "latin": "Euphonia elegantissima",
         "desc": "Colorful songbird with blue cap, dark back, and yellow belly.",
-        "spriteIndex": 20,
+        "spriteIndex": 19,
         "color": "#29b6f6"
     },
     "paintedBunting": {
         "name": "Painted Bunting 🎨",
         "latin": "Passerina ciris",
         "desc": "Most colorful bird in North America — blue head, green back, red belly.",
-        "spriteIndex": 21,
+        "spriteIndex": 20,
         "color": "#ab47bc"
     },
     "redWarbler": {
         "name": "Red Warbler ❤️",
         "latin": "Cardellina rubra",
         "desc": "Bright red songbird with silver ear patches from Mexico.",
-        "spriteIndex": 22,
+        "spriteIndex": 21,
         "color": "#ef5350"
     },
     "cubanTody": {
         "name": "Cuban Tody 🇨🇺",
         "latin": "Todus multicolor",
         "desc": "Tiny endemic Cuban bird with green coat, red chin, and pink flanks.",
-        "spriteIndex": 23,
+        "spriteIndex": 22,
         "color": "#66bb6a"
     },
     "violetBackedStarling": {
         "name": "Violet-backed Starling 💜",
         "latin": "Cinnyricinclus leucogaster",
         "desc": "African starling with shimmering iridescent violet plumage.",
-        "spriteIndex": 24,
+        "spriteIndex": 23,
         "color": "#7e57c2"
     },
     "stellarsJay": {
         "name": "Steller's Jay 💙",
         "latin": "Cyanocitta stelleri",
         "desc": "Mountain crest jay with deep blue and black plumage.",
-        "spriteIndex": 25,
+        "spriteIndex": 27,
         "color": "#1e88e5"
     },
     "mourningDove": {
         "name": "Mourning Dove 🕊️",
         "latin": "Zenaida macroura",
         "desc": "Graceful dove with a soft, mournful cooing call.",
-        "spriteIndex": 26,
+        "spriteIndex": 25,
         "color": "#bcaaa4"
     },
     "whiteWingedFairywren": {
         "name": "White-winged Fairywren 💙",
         "latin": "Malurus leucopterus",
         "desc": "Cobalt blue wren with pure white wing patches from Australia.",
-        "spriteIndex": 27,
+        "spriteIndex": 26,
         "color": "#1565c0"
     },
     "littleCrow": {
         "name": "Little Crow ⬛",
         "latin": "Corvus bennetti",
         "desc": "Clever and adaptable Australian corvid.",
-        "spriteIndex": 28,
+        "spriteIndex": 24,
         "color": "#212121"
     },
     "redpoll": {
@@ -343,22 +343,14 @@ def save_cfg(cfg: dict) -> None:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# DISPLAY TEXT & LINE PERCH DETECTOR (Text lines + Dividers __________________________)
+# DISPLAY TEXT & LINE PERCH DETECTOR
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def detect_display_lines(screen_w: int, screen_h: int) -> list[tuple[int, int, int]]:
-    """
-    Captures display screen pixels and detects both horizontal lines __________________________
-    AND text lines across any website or open app on screen.
-    Returns a list of (x_start, x_end, y_baseline).
-    """
     lines = []
-    
-    # 1. Primary taskbar line
     wa_w, wa_h = work_area()
     lines.append((0, wa_w, wa_h))
 
-    # 2. Window titlebars & edges via Win32 API
     if _WIN32:
         try:
             def enum_windows_cb(hwnd, _):
@@ -375,7 +367,6 @@ def detect_display_lines(screen_w: int, screen_h: int) -> list[tuple[int, int, i
         except Exception:
             pass
 
-    # 3. Real-time display screen pixel scan for text lines & __________________________
     if _PIL and _NUMPY:
         try:
             scr = ImageGrab.grab()
@@ -422,7 +413,6 @@ def detect_display_lines(screen_w: int, screen_h: int) -> list[tuple[int, int, i
         except Exception:
             pass
 
-    # Clean & sort lines
     cleaned = []
     lines.sort(key=lambda item: item[2])
     for l in lines:
@@ -435,7 +425,7 @@ def detect_display_lines(screen_w: int, screen_h: int) -> list[tuple[int, int, i
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# AUDIO SYNTHESIS ENGINE (Birdsong Chirps & Melodies)
+# AUDIO SYNTHESIS ENGINE
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _SOUNDS_DIR = Path(__file__).parent / "sounds"
@@ -512,7 +502,7 @@ class S(Enum):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SPRITE LAYER RENDERER (Supports Fractional Scale e.g. 1.5x = 48px)
+# AUTHENTIC SPRITE LAYER & PALETTE RECOLORING ENGINE
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class Sprites:
@@ -528,6 +518,16 @@ class Sprites:
         self.species_img = Image.open(str(self.DIR / "species.png")).convert("RGBA")
         self.hats_img = Image.open(str(self.DIR / "hats.png")).convert("RGBA")
 
+        # Build template mapping from birb.png slice 0 (32x32)
+        template_tile = self.birb_img.crop((0, 0, 32, 32))
+        template_pixels = template_tile.load()
+        self.color_to_pos = {}
+        for y in range(32):
+            for x in range(32):
+                rgba = template_pixels[x, y]
+                if rgba[3] > 0 and rgba not in self.color_to_pos:
+                    self.color_to_pos[rgba] = (x, y)
+
     def _render_layer_frame(self, slice_indices: list, flip_l: bool = False) -> ImageTk.PhotoImage:
         s_idx = SPECIES_DATA[self.species_key]["spriteIndex"]
         h_idx = HATS_DATA[self.hat_key]["idx"]
@@ -537,29 +537,44 @@ class Sprites:
         if key in self._cache:
             return self._cache[key]
 
-        s_mask = self.species_img.crop((s_idx * 32, 0, (s_idx + 1) * 32, 32))
-        out = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-
-        # 1. Color mask
-        out.alpha_composite(s_mask)
-
-        # 2. Base birb slices
+        # 1. Base birb composition from slices
+        b_composite = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
         for idx in slice_indices:
             b_slice = self.birb_img.crop((idx * 32, 0, (idx + 1) * 32, 32))
-            out.alpha_composite(b_slice)
+            b_composite.alpha_composite(b_slice)
 
-        # 3. Crested bird tuft
         if has_tuft:
             tuft_idx = 6 if 1 in slice_indices else 5
             t_slice = self.birb_img.crop((tuft_idx * 32, 0, (tuft_idx + 1) * 32, 32))
-            out.alpha_composite(t_slice)
+            b_composite.alpha_composite(t_slice)
 
-        # 4. Hat placement
+        # 2. Apply Species Palette Recoloring
+        s_tile = self.species_img.crop((s_idx * 32, 0, (s_idx + 1) * 32, 32))
+        s_pix = s_tile.load()
+        b_pix = b_composite.load()
+
+        out = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+        out_pix = out.load()
+
+        for y in range(32):
+            for x in range(32):
+                rgba = b_pix[x, y]
+                if rgba[3] == 0:
+                    continue
+                if rgba in self.color_to_pos:
+                    px, py = self.color_to_pos[rgba]
+                    spec_color = s_pix[px, py]
+                    out_pix[x, y] = spec_color if spec_color[3] > 0 else rgba
+                else:
+                    out_pix[x, y] = rgba
+
+        # 3. Wearable Hat Placement
         if h_idx >= 0 and h_idx * 12 < self.hats_img.width:
             h_frame = self.hats_img.crop((h_idx * 12, 0, (h_idx + 1) * 12, 12))
             hat_y = 2 if 1 in slice_indices else 1
             out.alpha_composite(h_frame, (10, hat_y))
 
+        # 4. Facing Direction Flipping: flip_l=False (faces LEFT), flip_l=True (faces RIGHT!)
         if flip_l:
             out = out.transpose(Image.FLIP_LEFT_RIGHT)
 
@@ -576,46 +591,57 @@ class Sprites:
         return sz, sz
 
     def load_all(self) -> dict:
+        """
+        FACING DIRECTION MAPPING:
+        - Moving / Facing LEFT:  flip_l = False (unflipped faces LEFT)
+        - Moving / Facing RIGHT: flip_l = True  (flipped faces RIGHT)
+        """
         return {
             "idle": [
-                self._render_layer_frame([0]),
+                self._render_layer_frame([0], flip_l=False),
             ],
             "bob": [
-                self._render_layer_frame([0]),
-                self._render_layer_frame([1]),
+                self._render_layer_frame([0], flip_l=False),
+                self._render_layer_frame([1], flip_l=False),
             ],
+
+            # Facing RIGHT when flying/hopping right! (flip_l = True)
             "fly_r": [
-                self._render_layer_frame([0]),
-                self._render_layer_frame([0, 7]),
-                self._render_layer_frame([1]),
-                self._render_layer_frame([0, 8]),
-            ],
-            "fly_l": [
                 self._render_layer_frame([0], flip_l=True),
                 self._render_layer_frame([0, 7], flip_l=True),
                 self._render_layer_frame([1], flip_l=True),
                 self._render_layer_frame([0, 8], flip_l=True),
             ],
             "hop_r": [
-                self._render_layer_frame([0]),
-                self._render_layer_frame([1]),
-            ],
-            "hop_l": [
                 self._render_layer_frame([0], flip_l=True),
                 self._render_layer_frame([1], flip_l=True),
             ],
-            "to_sleep":   [self._render_layer_frame([1])],
-            "sleeping":   [self._render_layer_frame([1])],
-            "from_sleep": [self._render_layer_frame([0])],
+
+            # Facing LEFT when flying/hopping left! (flip_l = False)
+            "fly_l": [
+                self._render_layer_frame([0], flip_l=False),
+                self._render_layer_frame([0, 7], flip_l=False),
+                self._render_layer_frame([1], flip_l=False),
+                self._render_layer_frame([0, 8], flip_l=False),
+            ],
+            "hop_l": [
+                self._render_layer_frame([0], flip_l=False),
+                self._render_layer_frame([1], flip_l=False),
+            ],
+
+            "to_sleep":   [self._render_layer_frame([1], flip_l=False)],
+            "sleeping":   [self._render_layer_frame([1], flip_l=False)],
+            "from_sleep": [self._render_layer_frame([0], flip_l=False)],
+
             "happy": [
-                self._render_layer_frame([0, 9, 2]),
-                self._render_layer_frame([0, 9, 3]),
-                self._render_layer_frame([0, 9, 4]),
-                self._render_layer_frame([0, 9, 3]),
+                self._render_layer_frame([0, 9, 2], flip_l=False),
+                self._render_layer_frame([0, 9, 3], flip_l=False),
+                self._render_layer_frame([0, 9, 4], flip_l=False),
+                self._render_layer_frame([0, 9, 3], flip_l=False),
             ],
             "angry": [
-                self._render_layer_frame([1, 8]),
-                self._render_layer_frame([0, 7]),
+                self._render_layer_frame([1, 8], flip_l=False),
+                self._render_layer_frame([0, 7], flip_l=False),
             ],
         }
 
@@ -686,7 +712,7 @@ class SpeciesSelectorWin:
 
         hdr = tk.Frame(self.top, bg=self.HEADER, pady=12, padx=16)
         hdr.pack(fill="x")
-        tk.Label(hdr, text="🐦 Choose Bird Species (34 Species)", font=("Segoe UI", 12, "bold"), bg=self.HEADER, fg=self.ACCENT).pack(anchor="w")
+        tk.Label(hdr, text="🐦 Choose Bird Species (34 Unique Species)", font=("Segoe UI", 12, "bold"), bg=self.HEADER, fg=self.ACCENT).pack(anchor="w")
 
         canvas = tk.Canvas(self.top, bg=self.BG, highlightthickness=0)
         scrollbar = tk.Scrollbar(self.top, orient="vertical", command=canvas.yview)
@@ -712,7 +738,7 @@ class SpeciesSelectorWin:
             row.pack(fill="x", pady=4, padx=4)
 
             prev_mgr = Sprites(1.5, key, current_hat)
-            img = prev_mgr._render_layer_frame([0])
+            img = prev_mgr._render_layer_frame([0], flip_l=False)
             self._img_cache.append(img)
 
             img_lbl = tk.Label(row, image=img, bg=bg_col)
@@ -774,7 +800,7 @@ class HatClosetWin:
             row.pack(fill="x", pady=3)
 
             prev_mgr = Sprites(1.5, current_species, key)
-            img = prev_mgr._render_layer_frame([0])
+            img = prev_mgr._render_layer_frame([0], flip_l=False)
             self._img_cache.append(img)
 
             img_lbl = tk.Label(row, image=img, bg=bg_col)
@@ -875,7 +901,7 @@ class SettingsWin:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# MAIN DESKTOP BIRD PET APPLICATION (Text Line & Flat Line Perching Engine)
+# MAIN DESKTOP BIRD PET APPLICATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class DesktopBird:
@@ -889,7 +915,7 @@ class DesktopBird:
         self.frame_idx    = 0
         self.tick         = 0
         self._chase_dir   = "r"
-        self.current_line = None # (x1, x2, y_top)
+        self.current_line = None
 
         scale = float(self.cfg.get("scale", 1.5))
         self._w = int(round(32 * scale))
@@ -930,7 +956,6 @@ class DesktopBird:
                 self.x = max(x1, min(x2 - self._w, self.cfg["pos_x"]))
             else:
                 self.x = int((x1 + x2 - self._w) / 2)
-            # Feet rest directly ON top of text baseline or flat line
             self.y = max(0, line_y - self._h)
 
     def _build_window(self):
@@ -969,7 +994,6 @@ class DesktopBird:
 
     def _on_release(self, event):
         if self._dragging:
-            # Snap feet to nearest text baseline or horizontal line on display
             self._find_nearest_perch_line()
             self.cfg["pos_x"] = self.x
             self.cfg["pos_y"] = self.y
@@ -1153,7 +1177,7 @@ class DesktopBird:
 
         speed = int(self.cfg["speed"])
 
-        # Strictly snap bird feet onto text line or divider baseline when sitting/sleeping/bobbing
+        # Snap bird feet onto text line or divider baseline when sitting/sleeping/bobbing
         if self.current_line and self.state in (S.IDLE, S.BOB, S.SLEEPING, S.TO_SLEEP, S.FROM_SLEEP, S.HAPPY, S.ANGRY):
             x1, x2, line_y = self.current_line
             self.y = line_y - self._h
@@ -1184,7 +1208,6 @@ class DesktopBird:
             dx = -move_speed if self.state in (S.HOP_L, S.FLY_L) else move_speed
             self.x += dx
 
-            # Lock feet to text baseline / divider line if hopping
             if not is_flying and self.current_line:
                 _, _, line_y = self.current_line
                 self.y = line_y - self._h
@@ -1225,7 +1248,6 @@ class DesktopBird:
             weights=[25, 20, 15, 15, 12, 12, 1,],
         )[0]
 
-        # Scan for display text baselines & lines when flying to a new perch!
         if choice in (S.FLY_L, S.FLY_R):
             self._update_perch_lines()
             if self.perch_lines:
