@@ -1,47 +1,77 @@
-# 🐾 Desktop Pet Collection
+# 🐱 Desktop Cat — Shiro & Custom Skins Edition
 
-A suite of interactive, animated desktop pet companions that live on your screen — wander around, sleep, play, chase your cursor, and keep you company!
+<img src="cat/idling.gif" alt="Desktop Cat idling"/>
 
----
-
-## 🐶 Available Pets
-
-| Pet | Directory | Versions / Skins | Description |
-|---|---|---|---|
-| 🐱 **Cat** | [`./cat`](./cat/) | Shiro (Heterochromia), Classic White, Black, Orange Tabby, Calico, Pink, Golden, Cyberpunk | Interactive cat with realistic purr, meow, happy & angry sounds |
-| 🐶 **Dog** | [`./dog`](./dog/) | Shiba Inu, Golden Retriever, Black Lab, Dalmatian, Husky | Playful dog that barks, wags tail, sleeps, and chases mouse cursor |
-| 🦊 **Fox** | [`./fox`](./fox/) | Red Fox, Arctic White Fox, Fennec Fox, Silver Fox | Curious fox with bushy tail animations, yips, and cursor chasing |
-| 🐰 **Bunny** | [`./bunny`](./bunny/) | White Bunny, Brown Lop, Dutch Black & White, Sakura Pink | Cute hopping rabbit with ear wiggles, binky hops, and squeaks |
-| 🐼 **Panda** | [`./panda`](./panda/) | Classic Panda, Red Panda, Golden Panda, Cyberpunk Panda | Chubby panda that waddles, munches bamboo, rolls over, and chases cursor |
-| 🐧 **Penguin** | [`./penguin`](./penguin/) | Emperor Penguin, Gentoo Penguin, Fairy Blue, Cyberpunk | Tuxedo penguin that waddles, flaps flippers, slides, and trumpet honks |
-| 🐮 **Cow** | [`./cow`](./cow/) | Holstein (B&W), Jersey Brown, Swiss White, Cyberpunk Cow | Gentle cow that grazes, wags tail, moos, and wanders your desktop |
-| 🦬 **Buffalo** | [`./buffalo`](./buffalo/) | American Bison, Water Buffalo, Cape Buffalo, Golden Buffalo | Mighty buffalo with shaggy hump, horns, deep grunts, and plain roaming |
+> A delightful interactive desktop companion that lives on your screen —
+> sleeps, wanders, chases your cursor, and keeps you company!
 
 ---
 
-## 🚀 Quick Start
+## ✨ Features
 
-Run any pet individually from its directory:
+### Behaviours & States
+| State | Description |
+|---|---|
+| **Idle** | Sits and plays through idle animations |
+| **Walking** | Strolls left or right across the screen |
+| **Sleeping** | Falls asleep with ZZZ animation, wakes up later |
+| **Chasing** | Runs toward your cursor when it moves |
+| **Happy** | Plays a bright animation when you pet them |
+| **Angry** | Grumbles briefly when disturbed mid-nap |
+
+### Interactivity
+- 🖱️ **Left-click** — Pet the cat (happy animation + chirp)
+- 🖱️ **Double-click** — Show a random speech bubble message
+- 🖱️ **Right-click** — Context menu (Pet, Poke, Say Something, Version Selector, Settings, Quit)
+- 🖱️ **Drag** — Pick up and reposition the cat anywhere on screen
+- 🖎  **System tray** icon with full menu *(requires Pillow + pystray)*
+
+---
+
+### 🎨 8 Selectable Cat Versions / Skins
+Switch cat skins in 1-click via Right-Click Version Selector modal, System Tray menu, or Settings:
+
+| Version | Skin | Description |
+|---|---|---|
+| **Shiro** | 🐱 | Pure snow-white cat with heterochromic eyes (left: blue, right: brown) |
+| **Classic White** | 🤍 | Original white & light-grey pixel cat |
+| **Midnight Black** | 🖤 | Sleek dark charcoal cat with yellow eyes |
+| **Orange Tabby** | 🧡 | Warm ginger/orange cat with soft stripes |
+| **Calico Patch** | 🤍🧡🖤 | Tri-color patch cat (white, orange & black) |
+| **Pastel Pink** | 🌸 | Soft sakura pastel pink cute cat |
+| **Golden Honey** | 🍯 | Warm golden honey cat |
+| **Cyberpunk Neon** | ⚡ | Electric cyan & magenta glowing cat |
+
+---
+
+## 🚀 Getting Started
+
+### Installation & Run
 
 ```bash
-# Run Cow 🐮
-cd cow
+# Clone the repo
+git clone https://github.com/theturkishangorashiro-art/Desktop_pet.git
+cd Desktop_pet/cat
+
+# Install dependencies
 pip install -r requirements.txt
-python main.py
 
-# Run Buffalo 🦬
-cd buffalo
-pip install -r requirements.txt
-python main.py
-
-# Run Dog 🐶
-cd dog
-python main.py
-
-# Run Shiro / Cat 🐱
-cd cat
+# Launch Desktop Cat
 python main.py
 ```
+
+---
+
+## 🕹️ Controls
+
+| Input | Action |
+|---|---|
+| Left-click | Pet the cat 🐾 |
+| Double-click | Show speech bubble 💬 |
+| Right-click | Open context menu ⚙️ |
+| Click + drag | Move cat anywhere on screen |
+| `Esc` | Quit |
+| Tray icon | Show / hide, version selector, settings, quit |
 
 ---
 
