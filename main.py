@@ -2,8 +2,8 @@
 Desktop Bird 🐦 — Pocket Bird Enhanced Edition
 Based on Pocket-Bird by @matthew-r-callaghan
 Featuring 34 Bird Species, 12 Wearable Hats, Authentic Wing-Flapping Animations,
-Line-Perching Engine (sits on window titlebars & taskbar lines), 1.5x Default Size (48px),
-Isolated Heart Particles (petting only), Birdsong Voice Synthesis, and Catppuccin UI.
+Display Screen Text & Line Perching Engine (detects text lines & horizontal lines __________________________ on websites/apps),
+1.5x Size (48px), Isolated Heart Particles (petting only), Birdsong Voice Synthesis, and Catppuccin UI.
 """
 
 import os
@@ -21,7 +21,7 @@ from enum import Enum, auto
 import tkinter as tk
 
 try:
-    from PIL import Image, ImageTk, ImageDraw
+    from PIL import Image, ImageTk, ImageDraw, ImageGrab
     _PIL = True
 except ImportError:
     _PIL = False
@@ -45,6 +45,12 @@ try:
     _WIN32 = True
 except ImportError:
     _WIN32 = False
+
+try:
+    import numpy as np
+    _NUMPY = True
+except ImportError:
+    _NUMPY = False
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -337,20 +343,22 @@ def save_cfg(cfg: dict) -> None:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SCREEN LINE & PERCH DETECTION (Taskbar & Open Window Top Edges)
+# DISPLAY TEXT & LINE PERCH DETECTOR (Text lines + Dividers __________________________)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def get_perch_lines(screen_w: int, screen_h: int) -> list[tuple[int, int, int]]:
+def detect_display_lines(screen_w: int, screen_h: int) -> list[tuple[int, int, int]]:
     """
-    Returns a list of horizontal perch lines (x_start, x_end, y_pos).
-    Always includes the primary taskbar top edge / work area line.
-    Includes top edges of open visible windows on Windows.
+    Captures display screen pixels and detects both horizontal lines __________________________
+    AND text lines across any website or open app on screen.
+    Returns a list of (x_start, x_end, y_baseline).
     """
     lines = []
-    # Primary line: Taskbar top edge / Work area bottom
+    
+    # 1. Primary taskbar line
     wa_w, wa_h = work_area()
     lines.append((0, wa_w, wa_h))
 
+    # 2. Window titlebars & edges via Win32 API
     if _WIN32:
         try:
             def enum_windows_cb(hwnd, _):
@@ -361,14 +369,69 @@ def get_perch_lines(screen_w: int, screen_h: int) -> list[tuple[int, int, int]]:
                         left, top, right, bottom = rect
                         w = right - left
                         h = bottom - top
-                        # Filter reasonable window sizes (titlebars/edges)
-                        if w >= 200 and h >= 100 and 0 <= top < screen_h - 60:
+                        if w >= 150 and h >= 80 and 0 <= top < screen_h - 40:
                             lines.append((max(0, left), min(screen_w, right), top))
             win32gui.EnumWindows(enum_windows_cb, None)
         except Exception:
             pass
 
-    return lines
+    # 3. Real-time display screen pixel scan for text lines & __________________________
+    if _PIL and _NUMPY:
+        try:
+            scr = ImageGrab.grab()
+            arr = np.array(scr.convert('L'), dtype=np.uint8)
+            h, w = arr.shape
+
+            fg_mask = (arr < 220)
+            dilated_row_mask = np.zeros_like(fg_mask, dtype=bool)
+            for shift in range(-6, 7):
+                dilated_row_mask |= np.roll(fg_mask, shift, axis=1)
+
+            raw_perches = []
+            for y in range(0, h, 2):
+                row = dilated_row_mask[y]
+                if not np.any(row):
+                    continue
+
+                padded = np.empty(w + 2, dtype=bool)
+                padded[0] = False
+                padded[1:-1] = row
+                padded[-1] = False
+
+                diff = np.diff(padded.astype(np.int8))
+                starts = np.where(diff == 1)[0]
+                ends = np.where(diff == -1)[0]
+
+                for s, e in zip(starts, ends):
+                    if e - s >= 50:
+                        raw_perches.append((int(s), int(e), int(y)))
+
+            if raw_perches:
+                raw_perches.sort(key=lambda p: (p[2], p[0]))
+                curr_x1, curr_x2, last_y = raw_perches[0]
+
+                for x1, x2, y in raw_perches[1:]:
+                    if abs(y - last_y) <= 16 and abs(x1 - curr_x1) < 40:
+                        last_y = y
+                        curr_x1 = min(curr_x1, x1)
+                        curr_x2 = max(curr_x2, x2)
+                    else:
+                        lines.append((curr_x1, curr_x2, last_y))
+                        curr_x1, curr_x2, last_y = x1, x2, y
+                lines.append((curr_x1, curr_x2, last_y))
+        except Exception:
+            pass
+
+    # Clean & sort lines
+    cleaned = []
+    lines.sort(key=lambda item: item[2])
+    for l in lines:
+        x1, x2, y = l
+        if x2 - x1 >= 40:
+            if not any(abs(y - existing[2]) < 8 and abs(x1 - existing[0]) < 25 for existing in cleaned):
+                cleaned.append(l)
+
+    return cleaned if cleaned else [(0, screen_w, screen_h - 48)]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -759,7 +822,7 @@ class SettingsWin:
 
         tk.Label(body, text="Appearance & Behavior", font=("Segoe UI", 10, "bold"), bg=self.BG, fg=self.ACCENT).pack(anchor="w", pady=(5, 2))
         
-        # Scale option (1.0x, 1.5x - default, 2.0x, 2.5x, 3.0x)
+        # Scale option
         s_row = tk.Frame(body, bg=self.BG); s_row.pack(fill="x", pady=3)
         tk.Label(s_row, text="Size Scale", font=("Segoe UI", 9), bg=self.BG, fg=self.TEXT, width=18, anchor="w").pack(side="left")
         
@@ -803,7 +866,7 @@ class SettingsWin:
         tk.Button(foot, text="Cancel", font=("Segoe UI", 9), bg=self.SURFACE, fg=self.TEXT, relief="flat", command=self.top.destroy).pack(side="right", padx=4)
 
         sw, sh = parent.winfo_screenwidth(), parent.winfo_screenheight()
-        self.top.geometry(f"360x440+{(sw-360)//2}+{(sh-440)//2}")
+        self.top.geometry(f"360x440+{(sw-360)//2}+{(sh-550)//2}")
 
     def _save(self):
         self._on_apply(self._cfg)
@@ -812,7 +875,7 @@ class SettingsWin:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# MAIN DESKTOP BIRD PET APPLICATION (Line Perching & Sitting Engine)
+# MAIN DESKTOP BIRD PET APPLICATION (Text Line & Flat Line Perching Engine)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class DesktopBird:
@@ -856,9 +919,8 @@ class DesktopBird:
         self.window.mainloop()
 
     def _update_perch_lines(self):
-        self.perch_lines = get_perch_lines(self.screen_w, self.screen_h)
+        self.perch_lines = detect_display_lines(self.screen_w, self.screen_h)
         if not self.current_line:
-            # Default to primary taskbar top edge line
             self.current_line = self.perch_lines[0]
 
     def _snap_to_current_line(self):
@@ -868,7 +930,7 @@ class DesktopBird:
                 self.x = max(x1, min(x2 - self._w, self.cfg["pos_x"]))
             else:
                 self.x = int((x1 + x2 - self._w) / 2)
-            # Feet rest directly ON top of line
+            # Feet rest directly ON top of text baseline or flat line
             self.y = max(0, line_y - self._h)
 
     def _build_window(self):
@@ -907,7 +969,7 @@ class DesktopBird:
 
     def _on_release(self, event):
         if self._dragging:
-            # Snap to nearest line on release
+            # Snap feet to nearest text baseline or horizontal line on display
             self._find_nearest_perch_line()
             self.cfg["pos_x"] = self.x
             self.cfg["pos_y"] = self.y
@@ -925,11 +987,10 @@ class DesktopBird:
 
         for l in self.perch_lines:
             x1, x2, line_y = l
-            if x1 <= self.x + self._w // 2 <= x2 or True:
-                dist = abs(bird_bottom - line_y)
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_line = l
+            dist = abs(bird_bottom - line_y)
+            if dist < min_dist:
+                min_dist = dist
+                closest_line = l
 
         self.current_line = closest_line
         x1, x2, line_y = self.current_line
@@ -1092,7 +1153,7 @@ class DesktopBird:
 
         speed = int(self.cfg["speed"])
 
-        # Strictly snap bird feet onto flat perch line when sitting/sleeping/bobbing
+        # Strictly snap bird feet onto text line or divider baseline when sitting/sleeping/bobbing
         if self.current_line and self.state in (S.IDLE, S.BOB, S.SLEEPING, S.TO_SLEEP, S.FROM_SLEEP, S.HAPPY, S.ANGRY):
             x1, x2, line_y = self.current_line
             self.y = line_y - self._h
@@ -1123,7 +1184,7 @@ class DesktopBird:
             dx = -move_speed if self.state in (S.HOP_L, S.FLY_L) else move_speed
             self.x += dx
 
-            # Lock feet to perch line if hopping
+            # Lock feet to text baseline / divider line if hopping
             if not is_flying and self.current_line:
                 _, _, line_y = self.current_line
                 self.y = line_y - self._h
@@ -1164,7 +1225,7 @@ class DesktopBird:
             weights=[25, 20, 15, 15, 12, 12, 1,],
         )[0]
 
-        # Occasionally switch perch line when flying!
+        # Scan for display text baselines & lines when flying to a new perch!
         if choice in (S.FLY_L, S.FLY_R):
             self._update_perch_lines()
             if self.perch_lines:
