@@ -3,8 +3,8 @@
 An animated desktop companion that lives on your desktop!
 
 ## ✨ Features
-- 🐾 **Interactive** — Left-click to pet, double-click for speech bubbles.
-- 🎨 **Multiple Versions / Skins** — Switch between 4 unique versions via Settings.
+- 🐾 **Interactive** — Left-click to pet, double-click for speech bubbles, drag to reposition anywhere.
+- 🎨 **Multiple Versions / Skins** — Switch between 4 unique versions via Version Selector or Settings.
 - 🔊 **Audio Effects** — Synthesised sound effects (barks, chirps, squeaks).
 - ⚙️ **Customisable** — Speed, scale, mouse chasing, and always-on-top toggles.
 

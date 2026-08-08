@@ -114,10 +114,10 @@ def ensure_sounds() -> tuple[Path, Path, Path, Path]:
     happy_path = _SOUNDS_DIR / "happy.wav"
     angry_path = _SOUNDS_DIR / "angry.wav"
 
-    if not meow_path.exists():  _gen_synth_sound(meow_path, 400, 700, 0.4)
-    if not purr_path.exists():  _gen_synth_sound(purr_path, 120, 160, 0.8)
-    if not happy_path.exists(): _gen_synth_sound(happy_path, 500, 900, 0.3)
-    if not angry_path.exists(): _gen_synth_sound(angry_path, 250, 150, 0.6)
+    if not meow_path.exists():  _gen_synth_sound(meow_path, 420, 750, 0.4)
+    if not purr_path.exists():  _gen_synth_sound(purr_path, 130, 170, 0.8)
+    if not happy_path.exists(): _gen_synth_sound(happy_path, 550, 950, 0.35)
+    if not angry_path.exists(): _gen_synth_sound(angry_path, 220, 140, 0.6)
 
     return meow_path, purr_path, happy_path, angry_path
 
@@ -225,9 +225,9 @@ class Sprites:
     def load_all(self) -> dict:
         return {
             "idle":       self.seq("idle1.png", "idle2.png", "idle3.png", "idle4.png"),
-            "to_sleep":   self.seq("sleeping1.png", "sleeping2.png", "sleeping3.png", "sleeping4.png"),
+            "to_sleep":   self.seq("sleeping1.png", "sleeping2.png", "sleeping3.png", "sleeping4.png", "sleeping5.png", "sleeping6.png"),
             "sleeping":   self.seq("zzz1.png", "zzz2.png", "zzz3.png", "zzz4.png"),
-            "from_sleep": self.seq("sleeping4.png", "sleeping3.png", "sleeping2.png", "sleeping1.png"),
+            "from_sleep": self.seq("sleeping6.png", "sleeping5.png", "sleeping4.png", "sleeping3.png", "sleeping2.png", "sleeping1.png"),
             "walk_l":     self.seq("walkingleft1.png", "walkingleft2.png", "walkingleft3.png", "walkingleft4.png"),
             "walk_r":     self.seq("walkingright1.png", "walkingright2.png", "walkingright3.png", "walkingright4.png"),
             "angry":      self.seq("action1.png", "action2.png", "action3.png"),
@@ -256,7 +256,7 @@ class Bubble:
         self.top.config(bg="#010101")
 
         msg = random.choice(MESSAGES)
-        frm = tk.Frame(self.top, bg="#1e1e2e", padx=10, pady=6, bd=1, relief="solid")
+        frm = tk.Frame(self.top, bg="#1e1e2e", padx=12, pady=8, bd=1, relief="solid")
         frm.config(highlightbackground="#cba6f7", highlightthickness=1)
         frm.pack()
 
@@ -275,6 +275,49 @@ class Bubble:
             self.top.destroy()
         except Exception:
             pass
+
+
+class VersionSelectorWin:
+    BG, SURFACE, OVERLAY, TEXT, SUBTEXT, ACCENT, GREEN, HEADER = (
+        "#1e1e2e", "#313244", "#45475a", "#cdd6f4", "#a6adc8", "#cba6f7", "#a6e3a1", "#181825"
+    )
+
+    def __init__(self, parent: tk.Tk, current_theme: str, on_select):
+        self._on_select = on_select
+        self.top = tk.Toplevel(parent)
+        self.top.title("🎨 Select Version")
+        self.top.resizable(False, False)
+        self.top.attributes("-topmost", True)
+        self.top.config(bg=self.BG)
+
+        hdr = tk.Frame(self.top, bg=self.HEADER, pady=12, padx=16)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text="🎨 Choose Version", font=("Segoe UI", 12, "bold"), bg=self.HEADER, fg=self.ACCENT).pack(anchor="w")
+
+        body = tk.Frame(self.top, bg=self.BG, padx=16, pady=12)
+        body.pack(fill="both", expand=True)
+
+        for key, label in THEMES.items():
+            is_active = (key == current_theme)
+            bg_col = self.SURFACE if not is_active else self.OVERLAY
+            fg_col = self.GREEN if is_active else self.TEXT
+            border_txt = " ✓ ACTIVE" if is_active else ""
+
+            btn = tk.Button(
+                body, text=f"{label}{border_txt}",
+                font=("Segoe UI", 10, "bold" if is_active else "normal"),
+                bg=bg_col, fg=fg_col, activebackground=self.ACCENT, activeforeground=self.BG,
+                relief="flat", cursor="hand2", anchor="w", padx=12, pady=6,
+                command=lambda k=key: self._choose(k),
+            )
+            btn.pack(fill="x", pady=3)
+
+        sw, sh = parent.winfo_screenwidth(), parent.winfo_screenheight()
+        self.top.geometry(f"330x410+{(sw-330)//2}+{(sh-410)//2}")
+
+    def _choose(self, theme_key: str):
+        self._on_select(theme_key)
+        self.top.destroy()
 
 
 class SettingsWin:
@@ -327,6 +370,8 @@ class SettingsWin:
 
 
 class DesktopPet:
+    _DRAG_THRESHOLD = 4
+
     def __init__(self):
         self.cfg = load_cfg()
         self.screen_w, self.screen_h = work_area()
@@ -341,9 +386,15 @@ class DesktopPet:
         self.x = int(self.screen_w * 0.75) if self.cfg["pos_x"] < 0 else self.cfg["pos_x"]
         self.y = self.screen_h - self._h if self.cfg["pos_y"] < 0 else self.cfg["pos_y"]
 
-        self._bubble = None
-        self._settings = None
-        self._tray_icon = None
+        self._dragging       = False
+        self._drag_orig_x    = 0
+        self._drag_orig_y    = 0
+        self._drag_win_x     = 0
+        self._drag_win_y     = 0
+        self._bubble         = None
+        self._settings       = None
+        self._tray_icon      = None
+
         if _TRAY: self._launch_tray()
 
         self.window.after(self.cfg["anim_ms"], self._loop)
@@ -359,10 +410,43 @@ class DesktopPet:
         self.label = tk.Label(self.window, bd=0, bg="black")
         self.label.pack()
 
-        self.label.bind("<Button-1>", self._pet)
-        self.label.bind("<Double-Button-1>", lambda e: self._show_bubble())
-        self.label.bind("<Button-3>", self._on_right_click)
-        self.window.bind("<Escape>", lambda e: self.window.destroy())
+        self.label.bind("<ButtonPress-1>",   self._on_press)
+        self.label.bind("<B1-Motion>",       self._on_drag)
+        self.label.bind("<ButtonRelease-1>", self._on_release)
+        self.label.bind("<Double-Button-1>", self._on_double)
+        self.label.bind("<Button-3>",        self._on_right_click)
+        self.window.bind("<Escape>",         lambda e: self.window.destroy())
+
+    def _on_press(self, event):
+        self._drag_orig_x = event.x_root
+        self._drag_orig_y = event.y_root
+        self._drag_win_x  = self.x
+        self._drag_win_y  = self.y
+        self._dragging    = False
+
+    def _on_drag(self, event):
+        dx = event.x_root - self._drag_orig_x
+        dy = event.y_root - self._drag_orig_y
+        if not self._dragging and (abs(dx) > self._DRAG_THRESHOLD or abs(dy) > self._DRAG_THRESHOLD):
+            self._dragging = True
+        if self._dragging:
+            self.x = self._drag_win_x + dx
+            self.y = self._drag_win_y + dy
+            self.window.geometry(f"{self._w}x{self._h}+{self.x}+{self.y}")
+
+    def _on_release(self, event):
+        if self._dragging:
+            self.cfg["pos_x"] = self.x
+            self.cfg["pos_y"] = self.y
+            save_cfg(self.cfg)
+            self._set_state(S.IDLE)
+        else:
+            self._pet()
+        self._dragging = False
+
+    def _on_double(self, event):
+        if not self._dragging:
+            self._show_bubble()
 
     def _reload_sprites(self):
         scale = int(self.cfg["scale"])
@@ -371,7 +455,9 @@ class DesktopPet:
         self._frames = mgr.load_all()
         self._w, self._h = mgr.sprite_size()
         self._sprite_mgr = mgr
-        self.current_frame = self._frames["idle"][0]
+        state_key = {S.IDLE: "idle", S.WALK_L: "walk_l", S.WALK_R: "walk_r", S.SLEEPING: "sleeping", S.HAPPY: "happy", S.ANGRY: "angry"}.get(self.state, "idle")
+        frames = self._frames.get(state_key, self._frames["idle"])
+        self.current_frame = frames[self.frame_idx % len(frames)]
         self.label.config(image=self.current_frame)
 
     def _launch_tray(self):
@@ -392,15 +478,37 @@ class DesktopPet:
     def _on_right_click(self, event):
         menu = tk.Menu(self.window, tearoff=0, bg="#1e1e2e", fg="#cdd6f4")
         menu.add_command(label="🦊  Pet Me!", command=self._pet)
+        menu.add_command(label="😾  Poke (Angry!)", command=self._anger)
         menu.add_command(label="💬  Say Something", command=self._show_bubble)
+        menu.add_separator()
+        menu.add_command(label="🎨  Fox Version Selector...", command=self._open_version_selector)
+        menu.add_separator()
         menu.add_command(label="⚙️   Settings", command=self._open_settings)
+        menu.add_separator()
         menu.add_command(label="❌  Quit", command=self.window.destroy)
         try: menu.tk_popup(event.x_root, event.y_root)
         finally: menu.grab_release()
 
     def _pet(self, event=None):
-        self._set_state(S.HAPPY)
-        self._play(self._happy_path)
+        if self.state in (S.SLEEPING, S.TO_SLEEP):
+            self._anger()
+        else:
+            self._set_state(S.HAPPY)
+            self._play(self._happy_path)
+
+    def _anger(self):
+        self._set_state(S.ANGRY)
+        self._play(self._angry_path)
+
+    def _open_version_selector(self):
+        curr = self.cfg.get("theme", "red_fox")
+        VersionSelectorWin(self.window, curr, self._switch_theme)
+
+    def _switch_theme(self, theme_key: str):
+        if self.cfg.get("theme") != theme_key:
+            self.cfg["theme"] = theme_key
+            save_cfg(self.cfg)
+            self._reload_sprites()
 
     def _play(self, path: Path):
         if self.cfg["sound"] and _SOUND:
@@ -433,14 +541,19 @@ class DesktopPet:
         self.label.config(image=self.current_frame)
 
         if self.state == S.HAPPY and self.tick > 20: self._set_state(S.IDLE)
-        elif self.state == S.IDLE and self.tick > 40:
-            if random.random() < 0.3: self._set_state(S.WALK_L)
-            elif random.random() < 0.3: self._set_state(S.WALK_R)
+        elif self.state == S.ANGRY and self.tick > 25: self._set_state(S.IDLE)
+        elif self.state == S.IDLE and self.tick > 45:
+            r = random.random()
+            if r < 0.35: self._set_state(S.WALK_L)
+            elif r < 0.70: self._set_state(S.WALK_R)
+            elif r < 0.85: self._set_state(S.SLEEPING)
         elif self.state in (S.WALK_L, S.WALK_R):
             dx = -self.cfg["speed"] if self.state == S.WALK_L else self.cfg["speed"]
             self.x += dx
             self.x = max(0, min(self.screen_w - self._w, self.x))
             if self.tick > 50: self._set_state(S.IDLE)
+        elif self.state == S.SLEEPING and self.tick > 120:
+            self._set_state(S.IDLE)
 
         self.window.geometry(f"{self._w}x{self._h}+{self.x}+{self.y}")
         self.window.after(self.cfg["anim_ms"], self._loop)

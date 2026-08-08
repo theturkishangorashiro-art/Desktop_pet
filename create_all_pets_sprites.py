@@ -257,9 +257,69 @@ def draw_penguin(frame=0, state="idle"):
     return img
 
 
+def draw_dog(frame=0, state="idle"):
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    tan = "#d9822b"
+    dark_brown = "#804000"
+    cream = "#f5c999"
+    black = "#201000"
+
+    if state == "sleep":
+        d.ellipse([12, 32, 52, 56], fill=tan, outline=dark_brown, width=2)
+        d.ellipse([34, 30, 54, 50], fill=tan, outline=dark_brown, width=2)
+        d.polygon([(36, 32), (32, 42), (40, 38)], fill=dark_brown)
+        d.arc([42, 38, 48, 44], start=0, end=180, fill=black, width=2)
+        d.ellipse([48, 40, 52, 44], fill=black)
+        return img
+
+    bob = 1 if frame % 2 == 1 and state == "walk" else 0
+    leg = (1 if frame % 2 == 0 else -1) * 3 if state == "walk" else 0
+    wag = [-4, 0, 4, 0][frame % 4]
+
+    # Tail
+    d.line([(16, 36), (12 + wag, 24)], fill=tan, width=4)
+
+    # Legs
+    d.rectangle([18 + leg, 44, 23 + leg, 56], fill=tan, outline=dark_brown)
+    d.rectangle([34 - leg, 44, 39 - leg, 56], fill=tan, outline=dark_brown)
+
+    # Body
+    d.ellipse([14, 28 + bob, 44, 48 + bob], fill=tan, outline=dark_brown, width=2)
+    d.ellipse([18, 32 + bob, 38, 48 + bob], fill=cream)
+
+    # Head
+    hx, hy = 36, 14 + bob
+    if state == "happy": hy -= 2
+    d.ellipse([hx, hy, hx + 22, hy + 22], fill=tan, outline=dark_brown, width=2)
+    d.ellipse([hx + 6, hy + 8, hx + 18, hy + 20], fill=cream)
+
+    # Floppy Ears
+    d.polygon([(hx + 2, hy + 4), (hx - 4, hy + 14), (hx + 6, hy + 12)], fill=dark_brown)
+    d.polygon([(hx + 18, hy + 4), (hx + 24, hy + 14), (hx + 14, hy + 12)], fill=dark_brown)
+
+    # Eyes & Nose
+    if state == "happy":
+        d.arc([hx + 8, hy + 6, hx + 12, hy + 10], start=180, end=360, fill=black, width=2)
+        d.arc([hx + 14, hy + 6, hx + 18, hy + 10], start=180, end=360, fill=black, width=2)
+    else:
+        d.ellipse([hx + 8, hy + 6, hx + 12, hy + 11], fill=black)
+        d.ellipse([hx + 15, hy + 6, hx + 19, hy + 11], fill=black)
+        d.ellipse([hx + 9, hy + 7, hx + 11, hy + 9], fill="#ffffff")
+        d.ellipse([hx + 16, hy + 7, hx + 18, hy + 9], fill="#ffffff")
+
+    d.polygon([(hx + 11, hy + 12), (hx + 15, hy + 12), (hx + 13, hy + 15)], fill=black)
+    if state == "happy" or state == "action":
+        d.ellipse([hx + 11, hy + 15, hx + 15, hy + 19], fill="#ff7675") # tongue
+
+    return img
+
+
 print("Generating all pet sprites...")
+make_sprites("dog", draw_dog)
 make_sprites("fox", draw_fox)
 make_sprites("bunny", draw_bunny)
 make_sprites("panda", draw_panda)
 make_sprites("penguin", draw_penguin)
 print("All pet sprites generated successfully!")
+
