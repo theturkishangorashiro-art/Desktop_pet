@@ -9,11 +9,13 @@ A suite of interactive, animated desktop pet companions that live on your screen
 | Pet | Directory | Versions / Skins | Description |
 |---|---|---|---|
 | 🐱 **Cat** | [`./cat`](./cat/) | Shiro (Heterochromia), Classic White, Black, Orange Tabby, Calico, Pink, Golden, Cyberpunk | Interactive cat with realistic purr, meow, happy & angry sounds |
-| 🐶 **Dog** | [`./dog`](./dog/) | Shiba Inu, Golden Retriever, Black Lab, Dalmatian, Husky | Playful dog that barks, wags tail, sleeps, and plays fetch |
-| 🦊 **Fox** | [`./fox`](./fox/) | Red Fox, Arctic White Fox, Fennec Fox, Silver Fox | Curious fox with bushy tail animations and yip sounds |
-| 🐰 **Bunny** | [`./bunny`](./bunny/) | White Bunny, Brown Lop, Dutch Black & White, Sakura Pink | Cute hopping rabbit with ear wiggles and binky hops |
-| 🐼 **Panda** | [`./panda`](./panda/) | Classic Panda, Red Panda, Golden Panda, Cyberpunk Panda | Chubby panda that waddles, munches bamboo, and rolls over |
-| 🐧 **Penguin** | [`./penguin`](./penguin/) | Emperor Penguin, Gentoo Penguin, Fairy Blue, Cyberpunk | Tuxedo penguin that waddles, flaps flippers, and slides |
+| 🐶 **Dog** | [`./dog`](./dog/) | Shiba Inu, Golden Retriever, Black Lab, Dalmatian, Husky | Playful dog that barks, wags tail, sleeps, and chases mouse cursor |
+| 🦊 **Fox** | [`./fox`](./fox/) | Red Fox, Arctic White Fox, Fennec Fox, Silver Fox | Curious fox with bushy tail animations, yips, and cursor chasing |
+| 🐰 **Bunny** | [`./bunny`](./bunny/) | White Bunny, Brown Lop, Dutch Black & White, Sakura Pink | Cute hopping rabbit with ear wiggles, binky hops, and squeaks |
+| 🐼 **Panda** | [`./panda`](./panda/) | Classic Panda, Red Panda, Golden Panda, Cyberpunk Panda | Chubby panda that waddles, munches bamboo, rolls over, and chases cursor |
+| 🐧 **Penguin** | [`./penguin`](./penguin/) | Emperor Penguin, Gentoo Penguin, Fairy Blue, Cyberpunk | Tuxedo penguin that waddles, flaps flippers, slides, and trumpet honks |
+| 🐮 **Cow** | [`./cow`](./cow/) | Holstein (B&W), Jersey Brown, Swiss White, Cyberpunk Cow | Gentle cow that grazes, wags tail, moos, and wanders your desktop |
+| 🦬 **Buffalo** | [`./buffalo`](./buffalo/) | American Bison, Water Buffalo, Cape Buffalo, Golden Buffalo | Mighty buffalo with shaggy hump, horns, deep grunts, and plain roaming |
 
 ---
 
@@ -22,16 +24,22 @@ A suite of interactive, animated desktop pet companions that live on your screen
 Run any pet individually from its directory:
 
 ```bash
-# Example: Run the Dog pet
-cd dog
+# Run Cow 🐮
+cd cow
 pip install -r requirements.txt
 python main.py
-```
 
-```bash
-# Example: Run Shiro / Cat pet
-cd cat
+# Run Buffalo 🦬
+cd buffalo
 pip install -r requirements.txt
+python main.py
+
+# Run Dog 🐶
+cd dog
+python main.py
+
+# Run Shiro / Cat 🐱
+cd cat
 python main.py
 ```
 

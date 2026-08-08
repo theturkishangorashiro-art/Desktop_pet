@@ -102,48 +102,51 @@ def draw_bunny(frame=0, state="idle"):
     img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     white = "#f5f5f5"
-    grey = "#e0e0e0"
+    gray = "#cccccc"
     pink = "#ff80ab"
-    dark = "#333333"
+    black = "#212121"
 
     if state == "sleep":
-        d.ellipse([14, 36, 50, 56], fill=white, outline=grey, width=2)
-        d.ellipse([34, 32, 54, 52], fill=white, outline=grey, width=2)
-        d.ellipse([24, 38, 42, 46], fill=pink) # ears down
-        d.arc([44, 40, 50, 46], start=0, end=180, fill=dark, width=2)
+        d.ellipse([14, 36, 48, 56], fill=white, outline=gray, width=2)
+        d.ellipse([30, 32, 50, 50], fill=white, outline=gray, width=2)
+        d.ellipse([34, 40, 48, 52], fill=white)
+        d.arc([40, 38, 46, 44], start=0, end=180, fill=black, width=2)
         return img
 
-    hop = 4 if (frame % 2 == 1 and state == "walk") or state == "happy" else 0
-    ear_w = [-2, 0, 2, 0][frame % 4]
+    bob = 2 if frame % 2 == 1 and state == "walk" else 0
+    hop = (1 if frame % 2 == 0 else -2) * 4 if state == "walk" else 0
 
-    # Tail puff
-    d.ellipse([10, 38 - hop, 18, 46 - hop], fill=white, outline=grey)
+    # Cotton Tail
+    d.ellipse([8, 38 + bob, 18, 48 + bob], fill=white, outline=gray)
 
     # Feet
-    d.ellipse([16, 50 - hop, 26, 58 - hop], fill=grey)
-    d.ellipse([32, 50 - hop, 42, 58 - hop], fill=grey)
+    d.ellipse([16 + hop, 46, 26 + hop, 56], fill=white, outline=gray)
+    d.ellipse([32 - hop, 46, 42 - hop, 56], fill=white, outline=gray)
 
     # Body
-    d.ellipse([16, 28 - hop, 46, 52 - hop], fill=white, outline=grey, width=2)
+    d.ellipse([14, 28 + bob, 46, 50 + bob], fill=white, outline=gray, width=2)
 
     # Head
-    hx, hy = 24, 16 - hop
-    d.ellipse([hx, hy, hx + 24, hy + 24], fill=white, outline=grey, width=2)
+    hx, hy = 34, 14 + bob
+    if state == "happy": hy -= 4
+    d.ellipse([hx, hy, hx + 22, hy + 22], fill=white, outline=gray, width=2)
 
     # Ears (wiggling)
-    d.ellipse([hx + 2 + ear_w, hy - 18, hx + 10 + ear_w, hy + 4], fill=white, outline=grey, width=2)
-    d.ellipse([hx + 4 + ear_w, hy - 16, hx + 8 + ear_w, hy + 2], fill=pink)
-    d.ellipse([hx + 14 - ear_w, hy - 18, hx + 22 - ear_w, hy + 4], fill=white, outline=grey, width=2)
-    d.ellipse([hx + 16 - ear_w, hy - 16, hx + 20 - ear_w, hy + 2], fill=pink)
+    ear_w = [-2, 0, 2, 0][frame % 4]
+    d.ellipse([hx + 2 + ear_w, hy - 18, hx + 8 + ear_w, hy + 4], fill=white, outline=gray)
+    d.ellipse([hx + 4 + ear_w, hy - 16, hx + 6 + ear_w, hy + 2], fill=pink)
+    d.ellipse([hx + 14 - ear_w, hy - 18, hx + 20 - ear_w, hy + 4], fill=white, outline=gray)
+    d.ellipse([hx + 16 - ear_w, hy - 16, hx + 18 - ear_w, hy + 2], fill=pink)
 
     # Eyes & Nose
     if state == "happy":
-        d.arc([hx + 4, hy + 8, hx + 10, hy + 14], start=180, end=360, fill=dark, width=2)
-        d.arc([hx + 14, hy + 8, hx + 20, hy + 14], start=180, end=360, fill=dark, width=2)
+        d.arc([hx + 4, hy + 6, hx + 9, hy + 11], start=180, end=360, fill=black, width=2)
+        d.arc([hx + 13, hy + 6, hx + 18, hy + 11], start=180, end=360, fill=black, width=2)
     else:
-        d.ellipse([hx + 5, hy + 8, hx + 9, hy + 13], fill=dark)
-        d.ellipse([hx + 15, hy + 8, hx + 19, hy + 13], fill=dark)
-    d.polygon([(hx + 11, hy + 14), (hx + 15, hy + 14), (hx + 13, hy + 17)], fill=pink) # nose
+        d.ellipse([hx + 4, hy + 6, hx + 8, hy + 11], fill=pink)
+        d.ellipse([hx + 14, hy + 6, hx + 18, hy + 11], fill=pink)
+
+    d.polygon([(hx + 10, hy + 13), (hx + 12, hy + 13), (hx + 11, hy + 15)], fill=pink)
 
     return img
 
@@ -154,53 +157,47 @@ def draw_panda(frame=0, state="idle"):
     d = ImageDraw.Draw(img)
     white = "#ffffff"
     black = "#212121"
-    grey = "#e0e0e0"
 
     if state == "sleep":
-        d.ellipse([12, 30, 52, 56], fill=white, outline=grey, width=2) # body
-        d.ellipse([14, 30, 26, 54], fill=black) # arm
-        d.ellipse([32, 28, 54, 50], fill=white, outline=grey, width=2) # head
-        d.ellipse([36, 26, 44, 34], fill=black) # ear
-        d.ellipse([42, 36, 48, 44], fill=black) # eye patch
-        d.arc([43, 37, 47, 43], start=0, end=180, fill=white, width=1)
+        d.ellipse([12, 32, 52, 56], fill=white, outline=black, width=2)
+        d.ellipse([34, 30, 54, 50], fill=white, outline=black, width=2)
+        d.ellipse([44, 32, 52, 40], fill=black) # ear
+        d.arc([42, 38, 48, 44], start=0, end=180, fill=black, width=2) # eye
         return img
 
-    waddle = 2 if frame % 2 == 1 and state == "walk" else 0
-    arm_y = -2 if state == "happy" else 0
+    bob = 1 if frame % 2 == 1 and state == "walk" else 0
+    leg = (1 if frame % 2 == 0 else -1) * 3 if state == "walk" else 0
 
-    # Legs
-    d.rectangle([18, 46, 26, 58], fill=black)
-    d.rectangle([38, 46, 46, 58], fill=black)
+    # Legs & Arms
+    d.rectangle([18 + leg, 44, 24 + leg, 56], fill=black)
+    d.rectangle([34 - leg, 44, 40 - leg, 56], fill=black)
 
     # Body
-    d.ellipse([14, 24 + waddle, 50, 52 + waddle], fill=white, outline=grey, width=2)
-    d.ellipse([14, 24 + waddle, 50, 36 + waddle], fill=black) # black shoulder band
-
-    # Arms
-    d.ellipse([10, 28 + arm_y + waddle, 20, 44 + arm_y + waddle], fill=black)
-    d.ellipse([44, 28 + arm_y + waddle, 54, 44 + arm_y + waddle], fill=black)
+    d.ellipse([14, 26 + bob, 46, 48 + bob], fill=white, outline=black, width=2)
+    d.ellipse([16, 28 + bob, 44, 38 + bob], fill=black) # dark panda vest
 
     # Head
-    hx, hy = 20, 10 + waddle
-    # Ears
-    d.ellipse([hx - 2, hy - 4, hx + 8, hy + 8], fill=black)
-    d.ellipse([hx + 16, hy - 4, hx + 26, hy + 8], fill=black)
+    hx, hy = 34, 12 + bob
+    if state == "happy": hy -= 2
+    d.ellipse([hx, hy, hx + 24, hy + 24], fill=white, outline=black, width=2)
 
-    # Face
-    d.ellipse([hx, hy, hx + 24, hy + 24], fill=white, outline=grey, width=2)
+    # Round Panda Ears
+    d.ellipse([hx + 1, hy - 4, hx + 9, hy + 6], fill=black)
+    d.ellipse([hx + 15, hy - 4, hx + 23, hy + 6], fill=black)
 
-    # Eye patches
-    d.ellipse([hx + 3, hy + 8, hx + 10, hy + 16], fill=black)
-    d.ellipse([hx + 14, hy + 8, hx + 21, hy + 16], fill=black)
+    # Eye Patches
+    d.ellipse([hx + 3, hy + 6, hx + 10, hy + 14], fill=black)
+    d.ellipse([hx + 14, hy + 6, hx + 21, hy + 14], fill=black)
+
+    # Eyes & Nose
     if state == "happy":
-        d.arc([hx + 4, hy + 9, hx + 9, hy + 14], start=180, end=360, fill=white, width=2)
-        d.arc([hx + 15, hy + 9, hx + 20, hy + 14], start=180, end=360, fill=white, width=2)
+        d.arc([hx + 5, hy + 8, hx + 9, hy + 12], start=180, end=360, fill=white, width=2)
+        d.arc([hx + 15, hy + 8, hx + 19, hy + 12], start=180, end=360, fill=white, width=2)
     else:
-        d.ellipse([hx + 5, hy + 10, hx + 8, hy + 13], fill=white)
-        d.ellipse([hx + 16, hy + 10, hx + 19, hy + 13], fill=white)
+        d.ellipse([hx + 5, hy + 8, hx + 8, hy + 12], fill=white)
+        d.ellipse([hx + 16, hy + 8, hx + 19, hy + 12], fill=white)
 
-    # Nose
-    d.ellipse([hx + 10, hy + 16, hx + 14, hy + 19], fill=black)
+    d.ellipse([hx + 10, hy + 15, hx + 14, hy + 18], fill=black)
 
     return img
 
@@ -214,30 +211,31 @@ def draw_penguin(frame=0, state="idle"):
     orange = "#ff9800"
 
     if state == "sleep":
-        d.ellipse([16, 28, 48, 54], fill=black)
-        d.ellipse([22, 32, 42, 52], fill=white)
-        d.ellipse([30, 20, 48, 38], fill=black)
-        d.arc([36, 28, 42, 34], start=0, end=180, fill=white, width=2)
-        d.polygon([(46, 30), (52, 32), (46, 34)], fill=orange)
+        d.ellipse([16, 32, 48, 56], fill=black)
+        d.ellipse([22, 34, 42, 54], fill=white)
+        d.arc([26, 36, 32, 40], start=0, end=180, fill=black, width=2)
+        d.arc([36, 36, 42, 40], start=0, end=180, fill=black, width=2)
+        d.polygon([(32, 38), (36, 38), (34, 42)], fill=orange)
         return img
 
-    tilt = 3 if frame % 2 == 1 and state == "walk" else 0
-    flap = 4 if state == "happy" or frame % 2 == 1 else 0
+    waddle = (1 if frame % 2 == 0 else -1) * 3 if state == "walk" else 0
+    flap = [-4, 0, 4, 0][frame % 4]
 
-    # Feet
-    d.ellipse([20 - tilt, 52, 32 - tilt, 60], fill=orange)
-    d.ellipse([32 + tilt, 52, 44 + tilt, 60], fill=orange)
+    # Orange Feet
+    d.polygon([(20 + waddle, 52), (28 + waddle, 52), (24 + waddle, 58)], fill=orange)
+    d.polygon([(36 - waddle, 52), (44 - waddle, 52), (40 - waddle, 58)], fill=orange)
 
     # Body
-    d.ellipse([16, 22, 48, 56], fill=black)
-    d.ellipse([22, 26, 42, 52], fill=white) # tummy
+    d.ellipse([16 + waddle, 18, 48 + waddle, 54], fill=black)
+    d.ellipse([22 + waddle, 22, 42 + waddle, 52], fill=white)
 
     # Flippers
-    d.ellipse([8 - flap, 28, 18, 44], fill=black)
-    d.ellipse([46, 28, 56 + flap, 44], fill=black)
+    d.ellipse([10 + waddle, 26 + flap, 18 + waddle, 42 + flap], fill=black)
+    d.ellipse([46 + waddle, 26 - flap, 54 + waddle, 42 - flap], fill=black)
 
     # Head
-    hx, hy = 20, 10
+    hx, hy = 20 + waddle, 10
+    if state == "happy": hy -= 2
     d.ellipse([hx, hy, hx + 24, hy + 22], fill=black)
     d.ellipse([hx + 4, hy + 12, hx + 20, hy + 22], fill=white)
 
@@ -257,6 +255,7 @@ def draw_penguin(frame=0, state="idle"):
     return img
 
 
+# 5. 🐶 DOG SPRITES
 def draw_dog(frame=0, state="idle"):
     img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -315,11 +314,139 @@ def draw_dog(frame=0, state="idle"):
     return img
 
 
+# 6. 🐮 COW SPRITES
+def draw_cow(frame=0, state="idle"):
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    white = "#ffffff"
+    black = "#212121"
+    pink = "#ffb7b2"
+    horn = "#e0e0e0"
+
+    if state == "sleep":
+        d.ellipse([10, 32, 54, 58], fill=white, outline=black, width=2)
+        d.ellipse([14, 36, 26, 48], fill=black) # spot
+        d.ellipse([32, 28, 54, 52], fill=white, outline=black, width=2)
+        d.ellipse([40, 40, 54, 52], fill=pink) # snout
+        d.arc([44, 36, 50, 42], start=0, end=180, fill=black, width=2) # eye
+        return img
+
+    bob = 1 if frame % 2 == 1 and state == "walk" else 0
+    leg = (1 if frame % 2 == 0 else -1) * 3 if state == "walk" else 0
+    tail = [-3, 0, 3, 0][frame % 4]
+
+    # Tail
+    d.line([(14, 34), (8 + tail, 46)], fill=white, width=3)
+    d.ellipse([6 + tail, 44, 10 + tail, 48], fill=black)
+
+    # Legs & Hooves
+    d.rectangle([18 + leg, 44, 24 + leg, 56], fill=white, outline=black)
+    d.rectangle([18 + leg, 52, 24 + leg, 56], fill=black)
+    d.rectangle([34 - leg, 44, 40 - leg, 56], fill=white, outline=black)
+    d.rectangle([34 - leg, 52, 40 - leg, 56], fill=black)
+
+    # Body
+    d.ellipse([12, 26 + bob, 46, 48 + bob], fill=white, outline=black, width=2)
+    # Spots
+    d.ellipse([16, 30 + bob, 28, 42 + bob], fill=black)
+    d.ellipse([32, 34 + bob, 42, 46 + bob], fill=black)
+
+    # Udder
+    d.ellipse([24, 42 + bob, 32, 48 + bob], fill=pink)
+
+    # Head
+    hx, hy = 36, 12 + bob
+    if state == "happy": hy -= 2
+    d.ellipse([hx, hy, hx + 24, hy + 24], fill=white, outline=black, width=2)
+    # Head spot
+    d.ellipse([hx + 2, hy + 2, hx + 12, hy + 12], fill=black)
+
+    # Horns
+    d.polygon([(hx + 4, hy + 4), (hx + 2, hy - 4), (hx + 8, hy + 2)], fill=horn, outline=black)
+    d.polygon([(hx + 20, hy + 4), (hx + 22, hy - 4), (hx + 16, hy + 2)], fill=horn, outline=black)
+
+    # Ears
+    d.polygon([(hx + 2, hy + 8), (hx - 4, hy + 12), (hx + 4, hy + 14)], fill=pink)
+    d.polygon([(hx + 22, hy + 8), (hx + 28, hy + 12), (hx + 20, hy + 14)], fill=pink)
+
+    # Snout
+    d.ellipse([hx + 4, hy + 12, hx + 20, hy + 22], fill=pink, outline="#e08080")
+    d.ellipse([hx + 7, hy + 15, hx + 10, hy + 18], fill=black) # nostril 1
+    d.ellipse([hx + 14, hy + 15, hx + 17, hy + 18], fill=black) # nostril 2
+
+    # Eyes
+    if state == "happy":
+        d.arc([hx + 6, hy + 5, hx + 10, hy + 9], start=180, end=360, fill=black, width=2)
+        d.arc([hx + 14, hy + 5, hx + 18, hy + 9], start=180, end=360, fill=black, width=2)
+    else:
+        d.ellipse([hx + 6, hy + 5, hx + 10, hy + 9], fill=black)
+        d.ellipse([hx + 14, hy + 5, hx + 18, hy + 9], fill=black)
+
+    return img
+
+
+# 7. 🦬 BUFFALO SPRITES
+def draw_buffalo(frame=0, state="idle"):
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    dark_brown = "#3e2723"
+    mid_brown = "#5d4037"
+    light_brown = "#8d6e63"
+    black = "#1b0000"
+    horn = "#b0bec5"
+
+    if state == "sleep":
+        d.ellipse([10, 30, 54, 58], fill=dark_brown, outline=black, width=2)
+        d.ellipse([14, 26, 36, 48], fill=mid_brown) # hump
+        d.ellipse([32, 28, 54, 52], fill=dark_brown, outline=black, width=2)
+        d.arc([44, 38, 50, 44], start=0, end=180, fill=black, width=2) # eye
+        return img
+
+    bob = 1 if frame % 2 == 1 and state == "walk" else 0
+    leg = (1 if frame % 2 == 0 else -1) * 3 if state == "walk" else 0
+    tail = [-3, 0, 3, 0][frame % 4]
+
+    # Tail
+    d.line([(14, 34), (8 + tail, 46)], fill=dark_brown, width=3)
+    d.ellipse([6 + tail, 44, 10 + tail, 48], fill=black)
+
+    # Legs
+    d.rectangle([18 + leg, 44, 24 + leg, 56], fill=dark_brown, outline=black)
+    d.rectangle([34 - leg, 44, 40 - leg, 56], fill=dark_brown, outline=black)
+
+    # Large Hump & Body
+    d.ellipse([12, 20 + bob, 38, 44 + bob], fill=mid_brown) # shaggy hump
+    d.ellipse([14, 26 + bob, 46, 48 + bob], fill=dark_brown, outline=black, width=2)
+
+    # Head
+    hx, hy = 34, 14 + bob
+    if state == "happy": hy -= 2
+    d.ellipse([hx, hy, hx + 26, hy + 26], fill=dark_brown, outline=black, width=2)
+    d.ellipse([hx + 4, hy + 2, hx + 22, hy + 18], fill=mid_brown) # shaggy head
+
+    # Large Curved Horns
+    d.arc([hx - 4, hy - 4, hx + 12, hy + 12], start=90, end=270, fill=horn, width=3)
+    d.arc([hx + 14, hy - 4, hx + 30, hy + 12], start=270, end=90, fill=horn, width=3)
+
+    # Eyes & Nose
+    if state == "happy":
+        d.arc([hx + 6, hy + 8, hx + 10, hy + 12], start=180, end=360, fill=black, width=2)
+        d.arc([hx + 16, hy + 8, hx + 20, hy + 12], start=180, end=360, fill=black, width=2)
+    else:
+        d.ellipse([hx + 6, hy + 8, hx + 10, hy + 12], fill=black)
+        d.ellipse([hx + 16, hy + 8, hx + 20, hy + 12], fill=black)
+
+    d.ellipse([hx + 8, hy + 18, hx + 18, hy + 24], fill=black) # snout/nose
+
+    return img
+
+
 print("Generating all pet sprites...")
-make_sprites("dog", draw_dog)
 make_sprites("fox", draw_fox)
 make_sprites("bunny", draw_bunny)
 make_sprites("panda", draw_panda)
 make_sprites("penguin", draw_penguin)
+make_sprites("dog", draw_dog)
+make_sprites("cow", draw_cow)
+make_sprites("buffalo", draw_buffalo)
 print("All pet sprites generated successfully!")
-

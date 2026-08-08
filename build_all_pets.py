@@ -15,13 +15,12 @@ PETS = {
             "husky":     "🐺  Husky",
         },
         "messages": [
-            "Woof! 🐶",
-            "Play fetch? 🎾",
+            "Woof woof! 🐶",
+            "Play fetch with me! 🎾",
             "Wag wag wag! 🐾",
             "*sniffs your shoes*",
-            "Befriend me forever!",
             "Did someone say TREATS?! 🦴",
-            "Good boy status: 100%",
+            "Good dog status: 100%",
             "*pant pant pant*",
             "I brought you a stick! 🪵",
             "AWOOOO! 🐺",
@@ -146,6 +145,62 @@ PETS = {
             "fairy_blue":("#0277bd", "#00acc1", "#e0f7fa"),
             "cyber":     ("#7c4dff", "#00e676", "#69f0ae"),
         }
+    },
+    "cow": {
+        "title": "Desktop Cow 🐮",
+        "name": "Cow",
+        "emoji": "🐮",
+        "config_file": ".desktop_cow_config.json",
+        "tray_name": "desktop_cow",
+        "themes": {
+            "holstein":  "🐮  Holstein (B&W)",
+            "jersey":    "🤎  Jersey Brown Cow",
+            "swiss":     "🤍  Swiss White Cow",
+            "cyber":     "⚡  Cyberpunk Cow",
+        },
+        "messages": [
+            "Moooooo! 🐮",
+            "Chewing the cud~ 🌾",
+            "Fresh milk time! 🥛",
+            "*tail swishes lazy flies*",
+            "Green pastures forever! 🌿",
+            "Moo-velous day! ✨",
+            "Grazing peacefully 🐄",
+        ],
+        "fills": {
+            "holstein":  ("#ffffff", "#212121", "#ffb7b2"),
+            "jersey":    ("#a1887f", "#4e342e", "#d7ccc8"),
+            "swiss":     ("#f5f5f5", "#b0bec5", "#ffcdd2"),
+            "cyber":     ("#00e5ff", "#d500f9", "#00e5ff"),
+        }
+    },
+    "buffalo": {
+        "title": "Desktop Buffalo 🦬",
+        "name": "Buffalo",
+        "emoji": "🦬",
+        "config_file": ".desktop_buffalo_config.json",
+        "tray_name": "desktop_buffalo",
+        "themes": {
+            "bison":     "🦬  American Bison",
+            "water":     "🌊  Water Buffalo",
+            "cape":      "🌾  Cape Buffalo",
+            "golden":    "🍯  Golden Buffalo",
+        },
+        "messages": [
+            "Low deep grunt... 🦬",
+            "Roaming the open plains! 🌾",
+            "Mighty & majestic! ✨",
+            "*stamps hoof powerfully*",
+            "Shaggy fur & strong horns! 💪",
+            "Thunderous spirit ⚡",
+            "Peaceful giant 🦬",
+        ],
+        "fills": {
+            "bison":     ("#3e2723", "#1b0000", "#8d6e63"),
+            "water":     ("#37474f", "#212121", "#78909c"),
+            "cape":      ("#263238", "#000000", "#546e7a"),
+            "golden":    ("#ffb300", "#ff6f00", "#ffe082"),
+        }
     }
 }
 
@@ -230,7 +285,7 @@ def save_cfg(cfg: dict) -> None:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# AUDIO SYNTHESIS
+# AUDIO SYNTHESIS ENGINE
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _SOUNDS_DIR = Path(__file__).parent / "sounds"
@@ -265,10 +320,10 @@ def ensure_sounds() -> tuple[Path, Path, Path, Path]:
     happy_path = _SOUNDS_DIR / "happy.wav"
     angry_path = _SOUNDS_DIR / "angry.wav"
 
-    if not meow_path.exists():  _gen_synth_sound(meow_path, 420, 750, 0.4)
-    if not purr_path.exists():  _gen_synth_sound(purr_path, 130, 170, 0.8)
-    if not happy_path.exists(): _gen_synth_sound(happy_path, 550, 950, 0.35)
-    if not angry_path.exists(): _gen_synth_sound(angry_path, 220, 140, 0.6)
+    if not meow_path.exists():  _gen_synth_sound(meow_path, 300, 550, 0.4)
+    if not purr_path.exists():  _gen_synth_sound(purr_path, 120, 160, 0.8)
+    if not happy_path.exists(): _gen_synth_sound(happy_path, 400, 800, 0.35)
+    if not angry_path.exists(): _gen_synth_sound(angry_path, 180, 120, 0.6)
 
     return meow_path, purr_path, happy_path, angry_path
 
@@ -297,6 +352,7 @@ class S(Enum):
     FROM_SLEEP = auto()
     HAPPY      = auto()
     ANGRY      = auto()
+    CHASE      = auto()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -324,19 +380,19 @@ class Sprites:
         out_r, out_g, out_b = r.copy(), g.copy(), b.copy()
         fur_mask = mask & (lum > 0.2)
 
-        if theme == "black_lab" or theme == "silver" or theme == "dutch" or theme == "black":
+        if theme in ("black_lab", "silver", "dutch", "black", "water", "cape"):
             out_r[fur_mask] = 35 + lum[fur_mask] * 50
             out_g[fur_mask] = 35 + lum[fur_mask] * 50
             out_b[fur_mask] = 45 + lum[fur_mask] * 50
-        elif theme == "golden" or theme == "fennec" or theme == "shiba":
+        elif theme in ("golden", "fennec", "shiba", "jersey", "bison"):
             out_r[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
             out_g[fur_mask] = np.minimum(255, lum[fur_mask] * 180)
             out_b[fur_mask] = np.minimum(255, lum[fur_mask] * 50)
-        elif theme == "pink" or theme == "sakura":
+        elif theme in ("pink", "sakura", "swiss"):
             out_r[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
             out_g[fur_mask] = np.minimum(255, lum[fur_mask] * 170)
             out_b[fur_mask] = np.minimum(255, lum[fur_mask] * 200)
-        elif theme == "cyber" or theme == "cyberpunk":
+        elif theme in ("cyber", "cyberpunk"):
             out_r[fur_mask] = lum[fur_mask] * 20
             out_g[fur_mask] = np.minimum(255, lum[fur_mask] * 230)
             out_b[fur_mask] = np.minimum(255, lum[fur_mask] * 255)
@@ -492,7 +548,7 @@ class SettingsWin:
         body = tk.Frame(self.top, bg=self.BG, padx=20, pady=10)
         body.pack(fill="both", expand=True)
 
-        tk.Label(body, text="Appearance", font=("Segoe UI", 10, "bold"), bg=self.BG, fg=self.ACCENT).pack(anchor="w", pady=(5, 2))
+        tk.Label(body, text="Appearance & Behavior", font=("Segoe UI", 10, "bold"), bg=self.BG, fg=self.ACCENT).pack(anchor="w", pady=(5, 2))
         
         # Theme dropdown
         t_row = tk.Frame(body, bg=self.BG); t_row.pack(fill="x", pady=3)
@@ -506,13 +562,49 @@ class SettingsWin:
         opt.config(bg=self.SURFACE, fg=self.TEXT, font=("Segoe UI", 9), highlightthickness=0, bd=1)
         opt.pack(side="right", fill="x", expand=True)
 
+        # Scale slider
+        s_row = tk.Frame(body, bg=self.BG); s_row.pack(fill="x", pady=3)
+        tk.Label(s_row, text="Size Scale (1x-4x)", font=("Segoe UI", 9), bg=self.BG, fg=self.TEXT, width=18, anchor="w").pack(side="left")
+        s_scale = tk.Scale(s_row, from_=1, to=4, orient="horizontal", bg=self.BG, fg=self.TEXT, highlightthickness=0, bd=0)
+        s_scale.set(self._cfg.get("scale", 1))
+        s_scale.pack(side="right", fill="x", expand=True)
+
+        # Speed slider
+        sp_row = tk.Frame(body, bg=self.BG); sp_row.pack(fill="x", pady=3)
+        tk.Label(sp_row, text="Walk Speed", font=("Segoe UI", 9), bg=self.BG, fg=self.TEXT, width=18, anchor="w").pack(side="left")
+        sp_scale = tk.Scale(sp_row, from_=1, to=10, orient="horizontal", bg=self.BG, fg=self.TEXT, highlightthickness=0, bd=0)
+        sp_scale.set(self._cfg.get("speed", 3))
+        sp_scale.pack(side="right", fill="x", expand=True)
+
+        # Checkboxes
+        c1_var = tk.BooleanVar(value=bool(self._cfg.get("always_on_top", True)))
+        c1 = tk.Checkbutton(body, text="Always on Top", variable=c1_var, bg=self.BG, fg=self.TEXT, selectcolor=self.SURFACE, activebackground=self.BG, activeforeground=self.ACCENT)
+        c1.pack(anchor="w", pady=2)
+
+        c2_var = tk.BooleanVar(value=bool(self._cfg.get("mouse_chasing", True)))
+        c2 = tk.Checkbutton(body, text="Mouse Chasing (pet follows cursor)", variable=c2_var, bg=self.BG, fg=self.TEXT, selectcolor=self.SURFACE, activebackground=self.BG, activeforeground=self.ACCENT)
+        c2.pack(anchor="w", pady=2)
+
+        c3_var = tk.BooleanVar(value=bool(self._cfg.get("sound", True)))
+        c3 = tk.Checkbutton(body, text="Enable Sound Effects", variable=c3_var, bg=self.BG, fg=self.TEXT, selectcolor=self.SURFACE, activebackground=self.BG, activeforeground=self.ACCENT)
+        c3.pack(anchor="w", pady=2)
+
         foot = tk.Frame(self.top, bg=self.HEADER, pady=10, padx=16)
         foot.pack(fill="x", side="bottom")
-        tk.Button(foot, text="Apply & Save", font=("Segoe UI", 9, "bold"), bg=self.ACCENT, fg=self.BG, relief="flat", command=self._save).pack(side="right", padx=4)
+        
+        def _do_save():
+            self._cfg["scale"] = s_scale.get()
+            self._cfg["speed"] = sp_scale.get()
+            self._cfg["always_on_top"] = c1_var.get()
+            self._cfg["mouse_chasing"] = c2_var.get()
+            self._cfg["sound"] = c3_var.get()
+            self._save()
+
+        tk.Button(foot, text="Apply & Save", font=("Segoe UI", 9, "bold"), bg=self.ACCENT, fg=self.BG, relief="flat", command=_do_save).pack(side="right", padx=4)
         tk.Button(foot, text="Cancel", font=("Segoe UI", 9), bg=self.SURFACE, fg=self.TEXT, relief="flat", command=self.top.destroy).pack(side="right", padx=4)
 
         sw, sh = parent.winfo_screenwidth(), parent.winfo_screenheight()
-        self.top.geometry(f"340x420+{{(sw-340)//2}}+{{(sh-420)//2}}")
+        self.top.geometry(f"360x440+{{(sw-360)//2}}+{{(sh-440)//2}}")
 
     def _save(self):
         self._on_apply(self._cfg)
@@ -531,6 +623,7 @@ class DesktopPet:
         self.state     = S.IDLE
         self.frame_idx = 0
         self.tick      = 0
+        self._chase_dir = "r"
         self._reload_sprites()
         self._meow_path, self._purr_path, self._happy_path, self._angry_path = ensure_sounds()
 
@@ -542,6 +635,8 @@ class DesktopPet:
         self._drag_orig_y    = 0
         self._drag_win_x     = 0
         self._drag_win_y     = 0
+        self._prev_mouse_x   = -999
+        self._prev_mouse_y   = -999
         self._bubble         = None
         self._settings       = None
         self._tray_icon      = None
@@ -610,6 +705,7 @@ class DesktopPet:
         frames = self._frames.get(state_key, self._frames["idle"])
         self.current_frame = frames[self.frame_idx % len(frames)]
         self.label.config(image=self.current_frame)
+        self._clamp_position()
 
     def _launch_tray(self):
         try:
@@ -674,38 +770,128 @@ class DesktopPet:
         SettingsWin(self.window, self.cfg, self._apply_settings)
 
     def _apply_settings(self, new_cfg: dict):
+        scale_changed = int(new_cfg["scale"]) != int(self.cfg["scale"])
+        theme_changed = new_cfg.get("theme") != self.cfg.get("theme")
         self.cfg.update(new_cfg)
-        self._reload_sprites()
+        self.window.attributes("-topmost", bool(self.cfg["always_on_top"]))
+        if scale_changed or theme_changed:
+            self._reload_sprites()
+            self._clamp_position()
 
     def _set_state(self, new_state: S):
         self.state = new_state
         self.frame_idx = 0
         self.tick = 0
 
-    def _loop(self):
-        self.tick += 1
-        state_key = {{S.IDLE: "idle", S.WALK_L: "walk_l", S.WALK_R: "walk_r", S.SLEEPING: "sleeping", S.HAPPY: "happy", S.ANGRY: "angry"}}.get(self.state, "idle")
-        frames = self._frames.get(state_key, self._frames["idle"])
+    def _current_frames(self):
+        if self.state == S.CHASE:
+            return self._frames["walk_l" if self._chase_dir == "l" else "walk_r"]
+        return {{
+            S.IDLE:       self._frames["idle"],
+            S.TO_SLEEP:   self._frames["to_sleep"],
+            S.SLEEPING:   self._frames["sleeping"],
+            S.FROM_SLEEP: self._frames["from_sleep"],
+            S.WALK_L:     self._frames["walk_l"],
+            S.WALK_R:     self._frames["walk_r"],
+            S.HAPPY:      self._frames["happy"],
+            S.ANGRY:      self._frames["angry"],
+        }}.get(self.state, self._frames["idle"])
 
+    def _advance_frame(self):
+        frames = self._current_frames()
         self.frame_idx = (self.frame_idx + 1) % len(frames)
         self.current_frame = frames[self.frame_idx]
+
+    def _update_state(self):
+        self.tick += 1
+        mx = self.window.winfo_pointerx()
+        my = self.window.winfo_pointery()
+
+        # Mouse chasing
+        if (self.cfg["mouse_chasing"]
+                and self.state not in (S.SLEEPING, S.TO_SLEEP, S.HAPPY, S.ANGRY, S.CHASE)
+                and not self._dragging):
+            moved = (abs(mx - self._prev_mouse_x) > 8 or abs(my - self._prev_mouse_y) > 8)
+            if moved:
+                self._set_state(S.CHASE)
+
+        self._prev_mouse_x = mx
+        self._prev_mouse_y = my
+
+        speed = int(self.cfg["speed"])
+
+        if self.state == S.IDLE:
+            if self.tick > random.randint(15, 50):
+                self._pick_random_state()
+
+        elif self.state == S.TO_SLEEP:
+            frames = self._frames["to_sleep"]
+            if self.frame_idx >= len(frames) - 1:
+                self._set_state(S.SLEEPING)
+
+        elif self.state == S.SLEEPING:
+            if self.tick > random.randint(60, 180):
+                self._set_state(S.FROM_SLEEP)
+
+        elif self.state == S.FROM_SLEEP:
+            frames = self._frames["from_sleep"]
+            if self.frame_idx >= len(frames) - 1:
+                self._set_state(S.IDLE)
+
+        elif self.state == S.WALK_L:
+            self.x -= speed
+            if self.x <= 0:
+                self.x = 0
+                self._set_state(S.IDLE)
+            elif self.tick > random.randint(25, 70):
+                self._set_state(S.IDLE)
+
+        elif self.state == S.WALK_R:
+            self.x += speed
+            if self.x >= self.screen_w - self._w:
+                self.x = self.screen_w - self._w
+                self._set_state(S.IDLE)
+            elif self.tick > random.randint(25, 70):
+                self._set_state(S.IDLE)
+
+        elif self.state == S.CHASE:
+            cx = self.x + self._w // 2
+            cy = self.y + self._h // 2
+            dx = mx - cx
+            dy = my - cy
+            dist = (dx * dx + dy * dy) ** 0.5
+
+            if dist < 24 or self.tick > 60:
+                self._set_state(S.IDLE)
+            else:
+                chase_speed = min(speed * 2, 14)
+                self.x += int(dx / dist * chase_speed)
+                self.y += int(dy / dist * chase_speed)
+                self._clamp_position()
+                self._chase_dir = "l" if dx < 0 else "r"
+
+        elif self.state == S.HAPPY:
+            if self.tick > 20: self._set_state(S.IDLE)
+
+        elif self.state == S.ANGRY:
+            if self.tick > 15: self._set_state(S.IDLE)
+
+    def _pick_random_state(self):
+        choice = random.choices(
+            [S.IDLE, S.WALK_L, S.WALK_R, S.TO_SLEEP],
+            weights=[35, 22, 22, 21],
+        )[0]
+        self._set_state(choice)
+
+    def _clamp_position(self):
+        self.x = max(0, min(self.screen_w - self._w, self.x))
+        self.y = max(0, min(self.screen_h - self._h, self.y))
+
+    def _loop(self):
+        if not self._dragging:
+            self._update_state()
+        self._advance_frame()
         self.label.config(image=self.current_frame)
-
-        if self.state == S.HAPPY and self.tick > 20: self._set_state(S.IDLE)
-        elif self.state == S.ANGRY and self.tick > 25: self._set_state(S.IDLE)
-        elif self.state == S.IDLE and self.tick > 45:
-            r = random.random()
-            if r < 0.35: self._set_state(S.WALK_L)
-            elif r < 0.70: self._set_state(S.WALK_R)
-            elif r < 0.85: self._set_state(S.SLEEPING)
-        elif self.state in (S.WALK_L, S.WALK_R):
-            dx = -self.cfg["speed"] if self.state == S.WALK_L else self.cfg["speed"]
-            self.x += dx
-            self.x = max(0, min(self.screen_w - self._w, self.x))
-            if self.tick > 50: self._set_state(S.IDLE)
-        elif self.state == S.SLEEPING and self.tick > 120:
-            self._set_state(S.IDLE)
-
         self.window.geometry(f"{{self._w}}x{{self._h}}+{{self.x}}+{{self.y}}")
         self.window.after(self.cfg["anim_ms"], self._loop)
 
@@ -720,8 +906,9 @@ An animated desktop companion that lives on your desktop!
 
 ## ✨ Features
 - 🐾 **Interactive** — Left-click to pet, double-click for speech bubbles, drag to reposition anywhere.
+- 🎯 **Mouse Chasing** — Pet actively walks and turns towards your cursor when moved!
 - 🎨 **Multiple Versions / Skins** — Switch between {themes_count} unique versions via Version Selector or Settings.
-- 🔊 **Audio Effects** — Synthesised sound effects (barks, chirps, squeaks).
+- 🔊 **Audio Effects** — Synthesised sound effects (barks, chirps, squeaks, moos).
 - ⚙️ **Customisable** — Speed, scale, mouse chasing, and always-on-top toggles.
 
 ## 🚀 How to Run
@@ -738,7 +925,7 @@ pystray>=0.19.0
 pywin32>=300; platform_system=="Windows"
 '''
 
-print("Building 5 pet projects...")
+print("Building all pet projects...")
 
 for key, data in PETS.items():
     default_theme = list(data["themes"].keys())[0]
@@ -754,6 +941,7 @@ for key, data in PETS.items():
         fills_dict=repr(data["fills"]),
     )
 
+    os.makedirs(key, exist_ok=True)
     with open(f"{key}/main.py", "w", encoding="utf-8") as f:
         f.write(main_code)
 
@@ -771,4 +959,4 @@ for key, data in PETS.items():
 
     print(f"  [OK] Built {key}/ (main.py, README.md, requirements.txt)")
 
-print("All 5 pet projects updated successfully!")
+print("All pet projects updated successfully!")
